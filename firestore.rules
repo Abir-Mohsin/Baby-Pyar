@@ -32,8 +32,10 @@ service cloud.firestore {
 
     // Orders collection
     match /orders/{orderId} {
-      // allow read: if true; // Uncomment if public order tracking by phone is needed without login. Currently restricted.
-      allow read: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
+      // Allow anybody to read a specific order if they have the ID (for tracking)
+      allow get: if true;
+      // Listing orders requires admin or being the owner
+      allow list: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
       allow create: if true;
       allow update: if isAdmin() || (signedIn() && (
         resource.data.userId == request.auth.uid && 

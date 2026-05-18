@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Package, TrendingUp, CheckCircle, Clock } from 'lucide-react';
 import { db } from '../firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 
 export default function OrderTracking() {
   const [orderId, setOrderId] = useState('');
@@ -24,36 +24,28 @@ export default function OrderTracking() {
     setError('');
     
     try {
-      const q = query(
-        collection(db, 'orders'),
-        where('customerPhone', '==', trimmedPhone)
-      );
-      const querySnapshot = await getDocs(q);
-      const phoneOrders = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const orderRef = doc(db, 'orders', trimmedOrderId);
+      const orderSnap = await getDoc(orderRef);
 
-      if (phoneOrders.length === 0) {
-        setError('এই ফোন নম্বরে কোনো অর্ডার পাওয়া যায়নি। নম্বরটি চেক করুন।');
+      if (!orderSnap.exists()) {
+        setError('অর্ডার আইডিটি সঠিক নয়। আপনার ড্যাশবোর্ড থেকে সঠিক আইডিটি কপি করে দিন।');
         setOrder(null);
         return;
       }
 
-      // Find the specific order that matches the ID (full or partial)
-      const foundOrder = phoneOrders.find(o => 
-        o.id.toLowerCase() === trimmedOrderId.toLowerCase() || 
-        o.id.toLowerCase().startsWith(trimmedOrderId.toLowerCase()) ||
-        o.id.toLowerCase().replace(/-/g, '').startsWith(trimmedOrderId.toLowerCase().replace(/-/g, ''))
-      );
+      const orderData = { id: orderSnap.id, ...orderSnap.data() } as any;
 
-      if (foundOrder) {
-        setOrder(foundOrder);
-        setError('');
-      } else {
-        setError('অর্ডার আইডিটি সঠিক নয়। আপনার ড্যাশবোর্ড থেকে সঠিক আইডিটি কপি করে দিন।');
+      if (orderData.customerPhone !== trimmedPhone) {
+        setError('এই ফোন নম্বরের সাথে ঐ অর্ডার আইডি মিলছেনা।');
         setOrder(null);
+        return;
       }
+
+      setOrder(orderData);
+      setError('');
     } catch (err: any) {
       console.error('Error tracking order:', err);
-      setError('সার্ভারের সাথে যোগাযোগ করা যাচ্ছে না। দয়া করে ইন্টারনেট সংযোগ চেক করুন।');
+      setError('সার্ভারের সাথে যোগাযোগ করা যাচ্ছে না। দয়া করে ইন্টারনেট সংযোগ চেক করুন এবং সঠিক আইডি দিচ্ছেন কিনা নিশ্চিত হোন।');
     } finally {
       setLoading(false);
     }

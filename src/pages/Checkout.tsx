@@ -3,12 +3,12 @@ import { useCart } from '../context/CartContext';
 import { useAuth, handleFirestoreError, OperationType } from '../context/AuthContext';
 import { db } from '../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 export default function Checkout() {
   const { cart, cartTotal, clearCart } = useCart();
-  const { user, userId, ensureUserRecord } = useAuth();
+  const { user, ensureUserRecord } = useAuth();
   const navigate = useNavigate();
   
   const [name, setName] = useState('');
@@ -32,21 +32,6 @@ export default function Checkout() {
     );
   }
 
-  if (!user) {
-    return (
-      <div className="py-32 px-6 max-w-md mx-auto text-center text-gray-900">
-        <h2 className="text-2xl font-bold mb-6">অর্ডার করতে লগইন প্রয়োজন</h2>
-        <p className="text-gray-600 mb-8">আপনার অর্ডার ট্র্যাক করতে এবং সিকিউরিটির জন্য দয়া করে লগইন করুন।</p>
-        <Link 
-          to="/login"
-          className="bg-brand text-white px-6 py-4 rounded-xl font-bold w-full hover:bg-brand-hover transition-all flex items-center justify-center gap-3 shadow-lg"
-        >
-          লগইন করতে এখানে ক্লিক করুন
-        </Link>
-      </div>
-    );
-  }
-
   const handleOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !phone || !address) return toast.error('সব ফিল্ড পূরণ করুন');
@@ -55,15 +40,17 @@ export default function Checkout() {
     setLoading(true);
     const orderPath = 'orders';
     try {
-      // 1. Ensure user record exists in Firestore
-      const syncedUser = await ensureUserRecord();
-      
-      if (!syncedUser) {
-        throw new Error('User synchronization failed. Your profile record could not be found or created in the database.');
+      let authorId = 'guest';
+      if (user) {
+        const syncedUser = await ensureUserRecord();
+        if (!syncedUser) {
+          throw new Error('User synchronization failed. Your profile record could not be found or created in the database.');
+        }
+        authorId = syncedUser.id || user.uid;
       }
 
       const orderData = {
-        userId: syncedUser.id || user.uid,
+        userId: authorId,
         customerName: name,
         customerPhone: phone,
         customerAddress: address,
@@ -82,19 +69,25 @@ export default function Checkout() {
         createdAt: serverTimestamp(),
       };
 
-      console.log('Attempting to create order for user:', syncedUser.id);
+      console.log('Attempting to create order for user:', authorId);
 
-      await addDoc(collection(db, orderPath), orderData);
+      const docRef = await addDoc(collection(db, orderPath), orderData);
       
-      console.log('Order created successfully');
-      toast.success('অর্ডার সফল হয়েছে!');
+      console.log('Order created successfully with ID:', docRef.id);
+      if (user) {
+        toast.success('অর্ডার সফল হয়েছে!');
+        navigate('/dashboard');
+      } else {
+        toast.success(`অর্ডার সফল হয়েছে! আপনার অর্ডার আইডি: ${docRef.id}`, { duration: 10000 });
+        navigate('/tracking');
+      }
       clearCart();
       setLoading(false);
-      navigate('/dashboard');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Final error catch:', error);
-      handleFirestoreError(error, OperationType.WRITE, orderPath);
-      toast.error('অর্ডার করতে সমস্যা হয়েছে: ' + (error.message || 'সার্ভার রেসপন্স দিচ্ছে না'));
+      const e = error as Error;
+      handleFirestoreError(e, OperationType.WRITE, orderPath);
+      toast.error('অর্ডার করতে সমস্যা হয়েছে: ' + (e.message || 'সার্ভার রেসপন্স দিচ্ছে না'));
     } finally {
       setTimeout(() => setLoading(false), 500);
     }
