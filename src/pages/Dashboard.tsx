@@ -21,14 +21,17 @@ export default function Dashboard() {
         setLoading(true);
         const q = query(
           collection(db, 'orders'),
-          where('userId', '==', userId),
-          orderBy('createdAt', 'desc')
+          where('userId', '==', userId)
         );
         const querySnapshot = await getDocs(q);
         const data = querySnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
-        }));
+        })).sort((a: any, b: any) => {
+          const dateA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : new Date(a.createdAt).getTime();
+          const dateB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : new Date(b.createdAt).getTime();
+          return dateB - dateA; // Descending
+        });
 
         setOrders(data || []);
       } catch (error: any) {
