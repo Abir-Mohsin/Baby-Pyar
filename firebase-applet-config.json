@@ -1,10 +1,10 @@
 {
-  "projectId": "gen-lang-client-0409758916",
-  "appId": "1:664747718798:web:b505758060180cc4f4f1df",
-  "apiKey": "AIzaSyAy-Pgw9qDoR_a5mg6zF-vOIaF-I8HSh-w",
-  "authDomain": "gen-lang-client-0409758916.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-c47ea79d-38ca-4331-ac7b-700e0ba597b7",
-  "storageBucket": "gen-lang-client-0409758916.firebasestorage.app",
-  "messagingSenderId": "664747718798",
-  "measurementId": ""
+  "apiKey": "AIzaSyBdx1RFeSfyfglnRjlBdrPDzbbYo9m4skw",
+  "authDomain": "baby-pyar.firebaseapp.com",
+  "projectId": "baby-pyar",
+  "storageBucket": "baby-pyar.firebasestorage.app",
+  "messagingSenderId": "553711084715",
+  "appId": "1:553711084715:web:7821b91f318fb4bd5443ee",
+  "measurementId": "G-JQV9BF3CZB",
+  "firestoreDatabaseId": "(default)"
 }
