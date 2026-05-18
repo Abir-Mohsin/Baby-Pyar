@@ -1,0 +1,108 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "customer"] },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "email", "role"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Product details",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "originalPrice": { "type": "number" },
+        "image": { "type": "string" },
+        "gallery": { "type": "array", "items": { "type": "string" } },
+        "category": { "type": "string" },
+        "stock": { "type": "integer" },
+        "rating": { "type": "number" },
+        "isFeatured": { "type": "boolean" },
+        "badge": { "type": "string" },
+        "variationType": { "type": "string" },
+        "availableVariations": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "price"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer order details",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "customerPhone": { "type": "string" },
+        "customerAddress": { "type": "string" },
+        "items": { "type": "array" },
+        "totalAmount": { "type": "number" },
+        "deliveryCharge": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"] },
+        "paymentMethod": { "type": "string" },
+        "trxId": { "type": "string" },
+        "trackingNumber": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "customerName", "customerPhone", "customerAddress", "items", "totalAmount"]
+    },
+    "Testimonial": {
+      "title": "Testimonial",
+      "description": "Customer reviews and testimonials",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "content": { "type": "string" },
+        "rating": { "type": "integer" },
+        "isApproved": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "content", "rating"]
+    },
+    "Settings": {
+      "title": "Settings",
+      "description": "App settings",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "data": { "type": "object" }
+      }
+    }
+  },
+  "firestore": {
+    "users": {
+      "schema": "User",
+      "description": "Profiles of registered users"
+    },
+    "products": {
+      "schema": "Product",
+      "description": "Store products"
+    },
+    "orders": {
+      "schema": "Order",
+      "description": "Customer orders"
+    },
+    "testimonials": {
+      "schema": "Testimonial",
+      "description": "Customer feedback"
+    },
+    "settings": {
+      "schema": "Settings",
+      "description": "Application settings"
+    }
+  }
+}

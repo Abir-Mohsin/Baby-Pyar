@@ -1,0 +1,59 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Utility functions
+    function signedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return signedIn() && 
+        (request.auth.token.email == 'abirmohsin02@gmail.com' || 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.auth.uid == userId;
+      allow update: if signedIn() && (request.auth.uid == userId || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // Products collection
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Orders collection
+    match /orders/{orderId} {
+      // allow read: if true; // Uncomment if public order tracking by phone is needed without login. Currently restricted.
+      allow read: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
+      allow create: if true;
+      allow update: if isAdmin() || (signedIn() && (
+        resource.data.userId == request.auth.uid && 
+        resource.data.status == 'pending' && 
+        request.resource.data.status == 'cancelled'
+      ));
+      allow delete: if isAdmin();
+    }
+
+    // Testimonials collection
+    match /testimonials/{testimonialId} {
+      allow read: if true;
+      allow create: if true; // anyone can test/review? Or signedIn?
+      allow update, delete: if isAdmin();
+    }
+
+    // Settings collection
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}
