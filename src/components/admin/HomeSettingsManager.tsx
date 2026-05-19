@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { db } from '../../firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import toast from 'react-hot-toast';
+import { formatImageUrl } from '../../utils/formatImage';
 
 export default function HomeSettingsManager() {
   const [loading, setLoading] = useState(true);
@@ -51,8 +52,17 @@ export default function HomeSettingsManager() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    const processedFormData = {
+      ...formData,
+      promoCards: formData.promoCards.map(card => ({
+        ...card,
+        image: formatImageUrl(card.image)
+      }))
+    };
+    
     try {
-      await setDoc(doc(db, 'settings', 'home'), { data: formData }, { merge: true });
+      await setDoc(doc(db, 'settings', 'home'), { data: processedFormData }, { merge: true });
       toast.success('হোমপেজ সেটিং সেভ হয়েছে!');
     } catch (error: any) {
       console.error('Error saving settings:', error);

@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { ShoppingBag, Heart } from 'lucide-react';
 import toast from 'react-hot-toast';
 import SEO from '../components/SEO';
+import { formatImageUrl } from '../utils/formatImage';
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -167,7 +168,7 @@ export default function ProductDetails() {
       <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden flex flex-col md:flex-row">
         <div className="md:w-1/2 bg-gray-50 flex flex-col">
           <div className="relative aspect-square overflow-hidden bg-gray-100 flex items-center justify-center">
-            <img src={activeImage} alt={product.name} className="w-full h-full object-cover transition-all duration-500" />
+            <img src={formatImageUrl(activeImage)} alt={product.name} className="w-full h-full object-cover transition-all duration-500" />
             {product.badge && <span className="absolute top-6 left-6 bg-white/90 backdrop-blur text-brand px-3 py-1 rounded-full text-xs font-bold z-10 shadow-sm">{product.badge}</span>}
           </div>
           
@@ -177,7 +178,7 @@ export default function ProductDetails() {
                 onClick={() => setActiveImage(product.image)}
                 className={`w-20 h-20 rounded-lg overflow-hidden border-2 flex-shrink-0 transition-all ${activeImage === product.image ? 'border-brand' : 'border-transparent'}`}
               >
-                <img src={product.image} className="w-full h-full object-cover" />
+                <img src={formatImageUrl(product.image)} className="w-full h-full object-cover" />
               </button>
               {product.gallery.map((img: string, idx: number) => (
                 <button 
@@ -185,7 +186,7 @@ export default function ProductDetails() {
                   onClick={() => setActiveImage(img)}
                   className={`w-20 h-20 rounded-lg overflow-hidden border-2 flex-shrink-0 transition-all ${activeImage === img ? 'border-brand' : 'border-transparent'}`}
                 >
-                  <img src={img} className="w-full h-full object-cover" />
+                  <img src={formatImageUrl(img)} className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>

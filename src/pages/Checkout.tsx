@@ -6,6 +6,7 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import SEO from '../components/SEO';
+import { formatImageUrl } from '../utils/formatImage';
 
 export default function Checkout() {
   const { cart, cartTotal, clearCart } = useCart();

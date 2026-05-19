@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { db } from '../../firebase';
 import { collection, query, orderBy, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore';
 import toast from 'react-hot-toast';
+import { formatImageUrl } from '../../utils/formatImage';
 
 export default function TestimonialsManager() {
   const [testimonials, setTestimonials] = useState<any[]>([]);
@@ -38,6 +39,7 @@ export default function TestimonialsManager() {
     try {
       const payload = {
         ...formData,
+        image: formatImageUrl(formData.image),
         createdAt: new Date()
       };
       await addDoc(collection(db, 'testimonials'), payload);

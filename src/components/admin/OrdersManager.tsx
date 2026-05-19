@@ -3,6 +3,7 @@ import { db } from '../../firebase';
 import { collection, query, orderBy, getDocs, doc, updateDoc } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 import { X, Package } from 'lucide-react';
+import { formatImageUrl } from '../../utils/formatImage';
 
 export default function OrdersManager() {
   const [orders, setOrders] = useState<any[]>([]);
@@ -149,7 +150,7 @@ export default function OrdersManager() {
                     <div key={index} className="flex items-center gap-4 border border-gray-100 p-3 rounded-xl bg-white shadow-sm">
                       <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden shrink-0 flex items-center justify-center">
                         {item.image ? (
-                          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                          <img src={formatImageUrl(item.image)} alt={item.name} className="w-full h-full object-cover" />
                         ) : (
                           <span className="text-xl">📦</span>
                         )}

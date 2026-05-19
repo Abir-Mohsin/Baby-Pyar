@@ -6,6 +6,7 @@ import { useCart } from '../context/CartContext';
 import { db } from '../firebase';
 import { collection, query, limit, getDocs, doc, getDoc } from 'firebase/firestore';
 import SEO from '../components/SEO';
+import { formatImageUrl } from '../utils/formatImage';
 
 // Dummy products for fallback
 export const DUMMY_PRODUCTS = [
@@ -191,7 +192,7 @@ export default function Home() {
                  card.image ? (
                    <Link key={idx} to={card.link || '/shop'} className="block rounded-2xl overflow-hidden shadow-md border hover:border-brand/30 transition-all group">
                      <div className="aspect-square relative flex items-center justify-center overflow-hidden">
-                       <img src={card.image} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                       <img src={formatImageUrl(card.image)} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                      </div>
                    </Link>
                  ) : null
@@ -239,7 +240,7 @@ export default function Home() {
                   className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all group flex flex-col h-full border border-gray-100"
                 >
                   <div className="relative aspect-square md:aspect-[4/3] overflow-hidden bg-gray-100">
-                    <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <img src={formatImageUrl(product.image)} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     {product.badge && (
                       <span className="absolute top-2 left-2 md:top-4 md:left-4 bg-white/90 backdrop-blur text-brand px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[10px] md:text-xs font-bold z-10 shadow-sm">{product.badge}</span>
                     )}

@@ -9,6 +9,7 @@ import { useCart } from '../context/CartContext';
 import { handleFirestoreError, OperationType } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import SEO from '../components/SEO';
+import { formatImageUrl } from '../utils/formatImage';
 
 export default function Shop() {
   const { addToCart, cart } = useCart();
@@ -85,7 +86,7 @@ export default function Shop() {
                   className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-lg transition-all flex flex-col h-full group"
                 >
                   <div className="relative aspect-square overflow-hidden bg-gray-100">
-                    <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <img src={formatImageUrl(product.image)} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     {product.badge && <span className="absolute top-2 left-2 md:top-3 md:left-3 bg-white/90 backdrop-blur text-brand px-2 py-0.5 md:py-1 rounded-full text-[10px] md:text-xs font-bold z-10 shadow-sm">{product.badge}</span>}
                   </div>
                   <div className="p-3 md:p-5 flex flex-col flex-grow">

@@ -3,6 +3,7 @@ import { useCart } from '../context/CartContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { Trash2, Plus, Minus, ArrowRight } from 'lucide-react';
 import SEO from '../components/SEO';
+import { formatImageUrl } from '../utils/formatImage';
 
 export default function Cart() {
   const { cart, updateQuantity, removeFromCart, cartTotal } = useCart();
@@ -35,7 +36,7 @@ export default function Cart() {
             const itemKey = item.variation ? `${item.id}-${item.variation}` : item.id;
             return (
             <div key={itemKey} className="flex gap-4 p-4 bg-white rounded-2xl border border-gray-200 shadow-sm">
-              <img src={item.image} alt={item.name} className="w-24 h-24 rounded-xl object-cover" />
+              <img src={formatImageUrl(item.image)} alt={item.name} className="w-24 h-24 rounded-xl object-cover" />
               <div className="flex-1">
                 <div className="flex justify-between items-start">
                   <h3 className="product-name font-bold text-lg text-gray-900">
