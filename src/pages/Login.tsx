@@ -49,7 +49,7 @@ export default function Login() {
       toast.success('লগইন সফল হয়েছে!');
       navigate(from, { replace: true });
     } catch (err: any) {
-      toast.error('গুগল লগইন ব্যর্থ হয়েছে');
+      toast.error('গুগল লগইন ব্যর্থ হয়েছে। যদি আপনি এটি প্রিভিউ উইন্ডোতে ব্যবহার করেন, তবে নতুন ট্যাবে ওপেন করে চেষ্টা করুন বা Firebase এ ডোমেইন অ্যাড করুন।');
       console.error(err);
     }
   };

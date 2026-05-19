@@ -9,7 +9,7 @@ interface OrderData {
   customerPhone?: string;
   status?: string;
   createdAt?: any;
-  items?: Array<{ name: string; qty: number; price: number }>;
+  items?: Array<{ name: string; qty: number; price: number; variation?: string; image?: string; }>;
   totalAmount?: number;
   [key: string]: unknown;
 }
@@ -214,9 +214,14 @@ export default function OrderTracking() {
               <h3 className="text-lg font-bold text-gray-900 mb-4 border-b border-gray-100 pb-2">অর্ডারের বিবরণ</h3>
               <div className="space-y-4 mb-6">
                 {Array.isArray(order.items) && order.items.map((item, idx: number) => (
-                  <div key={idx} className="flex justify-between text-gray-700 items-center">
-                    <span className="flex-1 product-name">{item.name} <span className="text-gray-400 font-normal">x{item.qty}</span></span>
-                    <span className="font-medium">৳ {(item.price * item.qty).toLocaleString('bn-BD')}</span>
+                  <div key={idx} className="flex justify-between text-gray-700 items-start">
+                    <div className="flex-1">
+                      <span className="product-name font-medium text-gray-900">{item.name} <span className="text-gray-400 font-normal ml-1">x{item.qty}</span></span>
+                      {item.variation && (
+                         <div className="text-xs text-gray-500 mt-0.5">{item.variation}</div>
+                      )}
+                    </div>
+                    <span className="font-medium bg-gray-50 px-2 py-1 rounded text-sm shrink-0 whitespace-nowrap ml-4">৳ {(item.price * item.qty).toLocaleString('bn-BD')}</span>
                   </div>
                 ))}
               </div>

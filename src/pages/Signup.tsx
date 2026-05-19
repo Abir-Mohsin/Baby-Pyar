@@ -47,7 +47,7 @@ export default function Signup() {
       toast.success('রেজিস্ট্রেশন সফল হয়েছে!');
       navigate('/dashboard');
     } catch (err: any) {
-      toast.error('গুগল লগইন ব্যর্থ হয়েছে');
+      toast.error('গুগল লগইন ব্যর্থ হয়েছে। নতুন ট্যাবে ওপেন করে চেষ্টা করুন বা Firebase এ ডোমেইন অ্যাড করুন।');
       console.error(err);
     }
   };

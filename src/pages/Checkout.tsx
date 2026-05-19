@@ -15,6 +15,7 @@ export default function Checkout() {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
+  const [note, setNote] = useState('');
   const [deliveryArea, setDeliveryArea] = useState<'inside' | 'outside'>('inside');
   const [paymentMethod, setPaymentMethod] = useState<'bkash' | 'cod'>('bkash');
   const [trxId, setTrxId] = useState('');
@@ -56,6 +57,7 @@ export default function Checkout() {
         customerName: name,
         customerPhone: phone,
         customerAddress: address,
+        note: note,
         items: cart.map(c => ({ 
           id: c.id, 
           name: c.variation ? `${c.name} - ${c.variation}` : c.name, 
@@ -115,6 +117,11 @@ export default function Checkout() {
             <div>
               <label className="block text-sm font-medium mb-2 text-gray-700">ঠিকানা <span className="text-brand">*</span></label>
               <textarea required value={address} onChange={e => setAddress(e.target.value)} className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-brand transition-all" placeholder="বাসা নম্বর, রোড, এলাকা, জেলা" />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-2 text-gray-700">অর্ডার নোট (অপশনাল)</label>
+              <textarea value={note} onChange={e => setNote(e.target.value)} className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-brand transition-all" placeholder="অর্ডারের বিষয়ে কোনো বিশেষ নির্দেশনা থাকলে এখানে লিখুন..." />
             </div>
             
             <div>

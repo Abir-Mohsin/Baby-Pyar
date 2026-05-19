@@ -35,8 +35,7 @@ export default function ProductsManager() {
     image: '',
     gallery: [] as string[],
     stock: 10,
-    variationType: 'none',
-    availableVariations: ''
+    variations: [] as { name: string, options: string[] }[]
   });
 
   const [galleryText, setGalleryText] = useState('');
@@ -62,8 +61,16 @@ export default function ProductsManager() {
   const handleCreateOrUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     const gallery = galleryText.split(',').map(url => formatImageUrl(url.trim())).filter(url => url !== '');
-    const variationArr = formData.availableVariations.split(',').map(v => v.trim()).filter(v => v !== '');
     const formattedMainImage = formatImageUrl(formData.image.trim());
+    
+    // Clean up variations (remove empty options)
+    const processedVariations = formData.variations
+      .filter(v => v.name.trim() !== '')
+      .map(v => ({
+        name: v.name.trim(),
+        options: v.options.map(o => o.trim()).filter(o => o !== '')
+      }))
+      .filter(v => v.options.length > 0);
     
     const productPayload: any = {
       name: formData.name,
@@ -75,8 +82,7 @@ export default function ProductsManager() {
       image: formattedMainImage,
       gallery: gallery || [],
       stock: formData.stock,
-      variationType: formData.variationType,
-      availableVariations: variationArr,
+      variations: processedVariations,
       updatedAt: new Date()
     };
 
@@ -93,7 +99,7 @@ export default function ProductsManager() {
       
       setIsAdding(false);
       setEditingId(null);
-      setFormData({ name: '', category: '', price: 0, originalPrice: 0, description: '', badge: '', image: '', gallery: [], stock: 10, variationType: 'none', availableVariations: '' });
+      setFormData({ name: '', category: '', price: 0, originalPrice: 0, description: '', badge: '', image: '', gallery: [], stock: 10, variations: [] });
       setGalleryText('');
       fetchProducts();
     } catch (error: any) {
@@ -105,6 +111,15 @@ export default function ProductsManager() {
   const startEditing = (p: any) => {
     setEditingId(p.id);
     setIsAdding(true);
+    let variationsArr = p.variations || [];
+    // Backwards compatibility for old variationType format
+    if (p.variationType && p.variationType !== 'none') {
+      variationsArr = [{
+        name: p.variationType === 'size' ? 'Size' : p.variationType === 'age' ? 'Age' : p.variationType,
+        options: Array.isArray(p.availableVariations) ? p.availableVariations : String(p.availableVariations || '').split(',').map(s=>s.trim()).filter(s=>s!== '')
+      }];
+    }
+    
     setFormData({
       name: p.name || '',
       category: p.category || '',
@@ -115,8 +130,7 @@ export default function ProductsManager() {
       image: p.image || '',
       gallery: p.gallery || [],
       stock: p.stock ?? 10,
-      variationType: p.variationType || 'none',
-      availableVariations: Array.isArray(p.availableVariations) ? p.availableVariations.join(', ') : ''
+      variations: variationsArr
     });
     setGalleryText(Array.isArray(p.gallery) ? p.gallery.join(', ') : '');
     // scroll to top smoothly
@@ -126,7 +140,7 @@ export default function ProductsManager() {
   const handleCancel = () => {
     setIsAdding(false);
     setEditingId(null);
-    setFormData({ name: '', category: '', price: 0, originalPrice: 0, description: '', badge: '', image: '', gallery: [], stock: 10, variationType: 'none', availableVariations: '' });
+    setFormData({ name: '', category: '', price: 0, originalPrice: 0, description: '', badge: '', image: '', gallery: [], stock: 10, variations: [] });
     setGalleryText('');
   };
 
@@ -179,22 +193,70 @@ export default function ProductsManager() {
             <label className="block text-xs text-gray-500 font-medium mb-1">স্টক</label>
             <input required type="number" className="w-full bg-white border border-gray-300 p-2 rounded-lg outline-none focus:ring-1 focus:ring-accent focus:border-brand" value={formData.stock} onChange={e=>setFormData({...formData, stock: Number(e.target.value)})} />
           </div>
-          <div className="md:col-span-2">
-            <label className="block text-xs text-gray-500 font-medium mb-1">ভেরিয়েশনের ধরন</label>
-            <select className="w-full bg-white border border-gray-300 p-2 rounded-lg outline-none focus:ring-1 focus:ring-accent focus:border-brand" value={formData.variationType} onChange={e=>setFormData({...formData, variationType: e.target.value})}>
-              <option value="none">কোনো ভেরিয়েশন নেই</option>
-              <option value="size">সাইজ (Size)</option>
-              <option value="age">বয়স (Age)</option>
-            </select>
-          </div>
-          {formData.variationType !== 'none' && (
-            <div className="md:col-span-2">
-              <label className="block text-xs text-gray-500 font-medium mb-1">
-                {formData.variationType === 'size' ? 'লভ্য সাইজসমূহ (কমা দিয়ে আলাদা করুন)' : 'লভ্য বয়সসমূহ (কমা দিয়ে আলাদা করুন)'}
-              </label>
-              <input type="text" className="w-full bg-white border border-gray-300 p-2 rounded-lg outline-none focus:ring-1 focus:ring-accent focus:border-brand" placeholder={formData.variationType === 'size' ? 'S, M, L, XL' : '1-2 Y, 2-3 Y, 3-4 Y'} value={formData.availableVariations} onChange={e=>setFormData({...formData, availableVariations: e.target.value})} />
+          <div className="md:col-span-2 mt-4 border-t border-gray-200 pt-4">
+            <div className="flex justify-between items-center mb-4">
+              <label className="block text-sm font-bold text-gray-900">ভেরিয়েশন (সাইজ, বয়স, কালার ইত্যাদি)</label>
+              <button 
+                type="button" 
+                onClick={() => setFormData({ ...formData, variations: [...formData.variations, { name: '', options: [] }] })}
+                className="bg-accent/20 text-brand px-3 py-1 rounded-lg text-xs font-bold hover:bg-accent/30 transition-colors"
+              >
+                + ভেরিয়েশন যোগ করুন
+              </button>
             </div>
-          )}
+            
+            {formData.variations.map((variation, index) => (
+              <div key={index} className="bg-white p-4 rounded-xl border border-gray-200 mb-3 flex flex-col gap-3 relative group">
+                <button 
+                  type="button"
+                  onClick={() => {
+                    const newVars = [...formData.variations];
+                    newVars.splice(index, 1);
+                    setFormData({ ...formData, variations: newVars });
+                  }}
+                  className="absolute top-2 right-2 text-red-500 bg-red-50 w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="রিমুভ করুন"
+                >
+                  ✕
+                </button>
+                <div>
+                  <label className="block text-xs text-gray-500 font-medium mb-1">ভেরিয়েশনের নাম (যেমন: Size, Color)</label>
+                  <input 
+                    type="text" 
+                    className="w-full bg-gray-50 border border-gray-300 p-2 rounded-lg outline-none focus:ring-1 focus:ring-accent focus:border-brand" 
+                    value={variation.name} 
+                    onChange={e => {
+                      const newVars = [...formData.variations];
+                      newVars[index].name = e.target.value;
+                      setFormData({ ...formData, variations: newVars });
+                    }} 
+                    placeholder="Size"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 font-medium mb-1">অপশনসমূহ (কমা দিয়ে আলাদা করুন)</label>
+                  <input 
+                    type="text" 
+                    className="w-full bg-gray-50 border border-gray-300 p-2 rounded-lg outline-none focus:ring-1 focus:ring-accent focus:border-brand" 
+                    value={variation.options.join(', ')} 
+                    onChange={e => {
+                      const newVars = [...formData.variations];
+                      // Just store the raw string while typing, we'll split it on save, or split it correctly here
+                      // To make it easy, we will split by comma 
+                      newVars[index].options = e.target.value.split(',');
+                      setFormData({ ...formData, variations: newVars });
+                    }} 
+                    placeholder="S, M, L, XL"
+                  />
+                </div>
+              </div>
+            ))}
+            {formData.variations.length === 0 && (
+              <div className="text-center py-4 bg-gray-100 rounded-lg text-sm text-gray-500">
+                কোনো ভেরিয়েশন নেই।
+              </div>
+            )}
+          </div>
           <div className="md:col-span-2">
             <label className="block text-xs text-gray-500 font-medium mb-1">ছবির URL</label>
             <input required type="text" className="w-full bg-white border border-gray-300 p-2 rounded-lg outline-none focus:ring-1 focus:ring-accent focus:border-brand" value={formData.image} onChange={e=>setFormData({...formData, image: e.target.value})} />

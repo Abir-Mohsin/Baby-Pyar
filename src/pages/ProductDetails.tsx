@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { db } from '../firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp, orderBy } from 'firebase/firestore';
 import { DUMMY_PRODUCTS } from './Home';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { ShoppingBag, Heart } from 'lucide-react';
 import toast from 'react-hot-toast';
 import SEO from '../components/SEO';
@@ -11,11 +12,16 @@ import SEO from '../components/SEO';
 export default function ProductDetails() {
   const { id } = useParams();
   const { addToCart, cart } = useCart();
+  const { user } = useAuth();
   const [product, setProduct] = useState<any>(null);
   const [qty, setQty] = useState(1);
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState<string>('');
-  const [selectedVariation, setSelectedVariation] = useState<string | null>(null);
+  const [selectedVariations, setSelectedVariations] = useState<Record<string, string>>({});
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [newReviewText, setNewReviewText] = useState('');
+  const [newReviewRating, setNewReviewRating] = useState(5);
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -44,29 +50,95 @@ export default function ProductDetails() {
         setLoading(false);
       }
     };
+
+    const fetchReviews = async () => {
+      if (!id) return;
+      try {
+        const q = query(collection(db, 'product_reviews'), where('productId', '==', id), orderBy('createdAt', 'desc'));
+        const snapshot = await getDocs(q);
+        setReviews(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+      } catch (error) {
+        console.error('Error fetching reviews:', error);
+      }
+    };
+
     fetchProduct();
+    fetchReviews();
   }, [id]);
 
   if (loading) return <div className="py-20 text-center text-gray-500">লোড হচ্ছে...</div>;
   if (!product) return <div className="py-20 text-center text-gray-500">প্রোডাক্ট পাওয়া যায়নি।</div>;
 
   const original = product.originalPrice || product.price;
-  const inCart = selectedVariation 
-    ? cart.some(item => item.id === product.id && item.variation === selectedVariation)
-    : cart.some(item => item.id === product.id && !item.variation);
+  // Backwards compatibility for parsing variations
+  const productVariations = product.variations || [];
+  if (productVariations.length === 0 && product.variationType && product.variationType !== 'none') {
+    productVariations.push({
+      name: product.variationType === 'size' ? 'Size' : product.variationType === 'age' ? 'Age' : product.variationType,
+      options: product.availableVariations || []
+    });
+  }
+
+  const variationsString = Object.keys(selectedVariations).length > 0 
+    ? Object.entries(selectedVariations).map(([k, v]) => `${k}: ${v}`).join(', ') 
+    : undefined;
+
+  const inCart = cart.some(item => 
+    item.id === product.id && 
+    (item.variation === variationsString || (!item.variation && !variationsString))
+  );
 
   const handleAddToCart = () => {
-    if (product.variationType && product.variationType !== 'none' && !selectedVariation) {
-      toast.error(`অনুগ্রহ করে ${product.variationType === 'size' ? 'সাইজ' : 'বয়স'} নির্বাচন করুন`);
-      return;
+    // Check if all variations are selected
+    if (productVariations.length > 0) {
+      const missing = productVariations.find((v: any) => !selectedVariations[v.name]);
+      if (missing) {
+        toast.error(`অনুগ্রহ করে ${missing.name} নির্বাচন করুন`);
+        return;
+      }
     }
+    
     addToCart({ 
       id: product.id, 
       name: product.name, 
       price: product.price, 
       image: product.image,
-      variation: selectedVariation || undefined
+      variation: variationsString
     }, qty);
+  };
+
+  const handleAddReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+      toast.error('রিভিউ দিতে লগইন করুন');
+      return;
+    }
+    if (!newReviewText.trim()) return toast.error('রিভিউ লিখুন');
+    if (!id) return;
+    
+    setSubmittingReview(true);
+    try {
+      await addDoc(collection(db, 'product_reviews'), {
+        productId: id,
+        userId: user.uid,
+        userName: user.displayName || 'Customer',
+        text: newReviewText,
+        rating: newReviewRating,
+        createdAt: serverTimestamp()
+      });
+      toast.success('রিভিউ যোগ করা হয়েছে');
+      setNewReviewText('');
+      setNewReviewRating(5);
+      
+      const q = query(collection(db, 'product_reviews'), where('productId', '==', id), orderBy('createdAt', 'desc'));
+      const snapshot = await getDocs(q);
+      setReviews(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+    } catch (err) {
+      console.error(err);
+      toast.error('রিভিউ দিতে সমস্যা হয়েছে');
+    } finally {
+      setSubmittingReview(false);
+    }
   };
 
   return (
@@ -140,22 +212,26 @@ export default function ProductDetails() {
           <div className="text-gray-600 leading-relaxed mb-6 prose prose-sm sm:prose-base max-w-none text-left" dangerouslySetInnerHTML={{ __html: product.description || "এটি একটি প্রিমিয়াম কোয়ালিটির চমৎকার প্রোডাক্ট। আপনার দৈনন্দিন কাজকে আরও সহজ এবং স্টাইলিশ করে তুলতে এর জুড়ি মেলা ভার। খুব সহজেই ব্যবহারযোগ্য এবং দীর্ঘস্থায়ী।" }}>
           </div>
 
-          {product.variationType && product.variationType !== 'none' && product.availableVariations?.length > 0 && (
-            <div className="mb-8">
-              <label className="block text-sm font-bold text-gray-900 mb-3 uppercase tracking-wider">
-                {product.variationType === 'size' ? 'সাইজ' : 'বয়স'} নির্বাচন করুন <span className="text-brand">*</span>
-              </label>
-              <div className="flex flex-wrap gap-3">
-                {product.availableVariations.map((variation: string) => (
-                  <button
-                    key={variation}
-                    onClick={() => setSelectedVariation(variation)}
-                    className={`px-5 py-2 rounded-xl border-2 font-bold transition-all ${selectedVariation === variation ? 'border-brand text-brand bg-accent/5' : 'border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'}`}
-                  >
-                    {variation}
-                  </button>
-                ))}
-              </div>
+          {productVariations.length > 0 && (
+            <div className="mb-8 space-y-4">
+              {productVariations.map((v: any, idx: number) => (
+                <div key={idx}>
+                  <label className="block text-sm font-bold text-gray-900 mb-3 uppercase tracking-wider">
+                    {v.name} নির্বাচন করুন <span className="text-brand">*</span>
+                  </label>
+                  <div className="flex flex-wrap gap-3">
+                    {v.options.map((option: string) => (
+                      <button
+                        key={option}
+                        onClick={() => setSelectedVariations({...selectedVariations, [v.name]: option})}
+                        className={`px-5 py-2 rounded-xl border-2 font-bold transition-all ${selectedVariations[v.name] === option ? 'border-brand text-brand bg-accent/5' : 'border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'}`}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
@@ -195,6 +271,86 @@ export default function ProductDetails() {
               <div><span className="font-bold text-gray-900">স্টক:</span> {product.stock > 0 ? `${product.stock} টি আছে` : 'স্টক আউট'}</div>
               <div><span className="font-bold text-gray-900">ডেলিভারি:</span> ২-৩ দিন</div>
             </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Reviews Section */}
+      <div className="mt-16 bg-white rounded-3xl border border-gray-200 p-8 shadow-sm">
+        <h2 className="text-2xl font-black mb-8 border-b border-gray-100 pb-4">কাস্টমার <span className="text-brand">রিভিউ</span></h2>
+        
+        <div className="grid md:grid-cols-3 gap-10">
+          <div className="md:col-span-1">
+            <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
+              <h3 className="font-bold text-lg mb-4 text-gray-900">আপনার মতামত দিন</h3>
+              {user ? (
+                <form onSubmit={handleAddReview} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-700">রেটিং</label>
+                    <div className="flex gap-1">
+                      {[1, 2, 3, 4, 5].map(star => (
+                        <button 
+                          key={star} 
+                          type="button" 
+                          onClick={() => setNewReviewRating(star)}
+                          className={`text-2xl focus:outline-none ${newReviewRating >= star ? 'text-yellow-500' : 'text-gray-300 hover:text-yellow-400'}`}
+                        >
+                          ★
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-700">রিভিউ <span className="text-brand">*</span></label>
+                    <textarea 
+                      required 
+                      value={newReviewText} 
+                      onChange={e => setNewReviewText(e.target.value)} 
+                      className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all" 
+                      placeholder="প্রোডাক্টটি কেমন লেগেছে? আপনার মতামত শেয়ার করুন..." 
+                    />
+                  </div>
+                  <button 
+                    type="submit" 
+                    disabled={submittingReview}
+                    className="w-full bg-brand text-white py-3 rounded-xl font-bold hover:bg-brand-hover transition-all disabled:opacity-70"
+                  >
+                    {submittingReview ? 'সাবমিট হচ্ছে...' : 'রিভিউ সাবমিট করুন'}
+                  </button>
+                </form>
+              ) : (
+                <div className="text-center py-6">
+                  <p className="text-gray-600 mb-4">রিভিউ দিতে লগইন করুন</p>
+                  <Link to="/login" className="inline-block bg-brand text-white px-6 py-2 rounded-lg font-bold hover:bg-brand-hover transition-all">লগইন করুন</Link>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <div className="md:col-span-2 space-y-4">
+            {reviews.length === 0 ? (
+              <div className="text-center py-10 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                <span className="text-4xl block mb-2">💬</span>
+                <p className="text-gray-500">এখনো কোনো রিভিউ নেই। প্রথম রিভিউ আপনিই দিন!</p>
+              </div>
+            ) : (
+              reviews.map((review) => (
+                <div key={review.id} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col gap-2">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="font-bold text-gray-900">{review.userName}</h4>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-yellow-500 text-sm">{'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}</span>
+                        <span className="text-xs text-gray-400">
+                          {review.createdAt?.toDate ? review.createdAt.toDate().toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Recently'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-gray-700 leading-relaxed mt-2">{review.text}</p>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
