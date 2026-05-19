@@ -8,6 +8,7 @@ import { motion } from 'motion/react';
 import { useCart } from '../context/CartContext';
 import { handleFirestoreError, OperationType } from '../context/AuthContext';
 import toast from 'react-hot-toast';
+import SEO from '../components/SEO';
 
 export default function Shop() {
   const { addToCart, cart } = useCart();
@@ -41,6 +42,18 @@ export default function Shop() {
 
   return (
     <div className="py-8 px-4 md:px-6 bg-transparent min-h-screen text-gray-900">
+      <SEO 
+        title="Shop" 
+        description="Explore our wide range of baby products."
+        url="https://babypyar.com/shop"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          "name": "Shop - Baby Pyar",
+          "description": "Explore our wide range of baby products.",
+          "url": "https://babypyar.com/shop"
+        }}
+      />
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-black mb-8 border-b border-gray-200 pb-4">সব <span className="text-brand">প্রোডাক্ট</span></h1>
         

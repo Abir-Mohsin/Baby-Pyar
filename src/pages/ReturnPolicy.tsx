@@ -5,6 +5,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
+import SEO from '../components/SEO';
 
 export default function ReturnPolicy() {
   const [content, setContent] = useState('এখানে আপনার রিটার্ন পলিসি লিখুন...');
@@ -37,6 +38,7 @@ export default function ReturnPolicy() {
 
   return (
     <div className="py-16 px-4 bg-white min-h-screen text-gray-900">
+      <SEO title="Return Policy" url="https://babypyar.com/return" />
       <div className="max-w-4xl mx-auto">
         <button onClick={() => navigate(-1)} className="mb-6 flex flex-row gap-2 items-center text-gray-500 hover:text-gray-900 transition-colors">
           <ArrowLeft size={20} /> <span>ফিরে যান</span>

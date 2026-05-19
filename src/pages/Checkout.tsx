@@ -5,6 +5,7 @@ import { db } from '../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import SEO from '../components/SEO';
 
 export default function Checkout() {
   const { cart, cartTotal, clearCart } = useCart();
@@ -26,6 +27,7 @@ export default function Checkout() {
   if (cart.length === 0) {
     return (
       <div className="py-32 text-center text-gray-900">
+        <SEO title="Checkout" url="https://babypyar.com/checkout" />
         <h2 className="text-2xl font-bold mb-4">আপনার কার্ট খালি</h2>
         <button onClick={() => navigate('/shop')} className="text-brand hover:text-brand-hover underline font-medium">শপিং করুন</button>
       </div>
@@ -95,6 +97,7 @@ export default function Checkout() {
 
   return (
     <div className="py-16 px-6 max-w-6xl mx-auto text-gray-900 min-h-screen">
+      <SEO title="Checkout" url="https://babypyar.com/checkout" />
       <h1 className="text-3xl font-black mb-10">চেকআউট</h1>
       
       <div className="grid lg:grid-cols-2 gap-10">

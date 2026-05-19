@@ -6,6 +6,7 @@ import { DUMMY_PRODUCTS } from './Home';
 import { useCart } from '../context/CartContext';
 import { ShoppingBag, Heart } from 'lucide-react';
 import toast from 'react-hot-toast';
+import SEO from '../components/SEO';
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -70,6 +71,27 @@ export default function ProductDetails() {
 
   return (
     <div className="py-16 px-6 max-w-7xl mx-auto min-h-screen text-gray-900">
+      <SEO 
+        title={product.name} 
+        description={product.description || product.name} 
+        image={product.image}
+        url={`https://babypyar.com/product/${product.id}`}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Product",
+          "name": product.name,
+          "image": product.image,
+          "description": product.description || product.name,
+          "sku": product.id,
+          "offers": {
+            "@type": "Offer",
+            "url": `https://babypyar.com/product/${product.id}`,
+            "priceCurrency": "BDT",
+            "price": product.price,
+            "availability": product.inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
+          }
+        }}
+      />
       <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden flex flex-col md:flex-row">
         <div className="md:w-1/2 bg-gray-50 flex flex-col">
           <div className="relative aspect-square overflow-hidden bg-gray-100 flex items-center justify-center">

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Search, Package, TrendingUp, CheckCircle, Clock } from 'lucide-react';
 import { db } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import SEO from '../components/SEO';
 
 interface OrderData {
   id?: string;
@@ -74,6 +75,7 @@ export default function OrderTracking() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-16 px-4 font-[sans-serif]">
+      <SEO title="Order Tracking" url="https://babypyar.com/tracking" />
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-10">
           <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">অর্ডার <span className="text-brand">ট্র্যাকিং</span></h1>

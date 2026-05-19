@@ -5,6 +5,7 @@ import { motion } from 'motion/react';
 import { useCart } from '../context/CartContext';
 import { db } from '../firebase';
 import { collection, query, limit, getDocs, doc, getDoc } from 'firebase/firestore';
+import SEO from '../components/SEO';
 
 // Dummy products for fallback
 export const DUMMY_PRODUCTS = [
@@ -59,7 +60,7 @@ export default function Home() {
   const [products, setProducts] = useState<any[]>(DUMMY_PRODUCTS);
   const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState<any>({
-    heroTitle: 'Baby Pyar এ স্বাগতম আপনাকে! 🎉',
+    heroTitle: 'Baby Pyar এ স্বাগতম আপনাকে!',
     heroSubtitle: 'প্রিমিয়াম কোয়ালিটির প্রোডাক্ট সবচেয়ে সাশ্রয়ী মূল্যে। বিকাশে পেমেন্ট করলে পাচ্ছেন ১০% এক্সট্রা ডিসকাউন্ট! সারা বাংলাদেশে দ্রুত ডেলিভারি।',
     videoUrl: '',
     stats: { customers: '5000+', districts: '64', rating: '4.8★' },
@@ -119,6 +120,21 @@ export default function Home() {
 
   return (
     <div className="overflow-x-hidden bg-transparent text-gray-800 font-[sans-serif]">
+      <SEO 
+        url="https://babypyar.com"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "Baby Pyar",
+          "url": "https://babypyar.com",
+          "description": "Baby Pyar offers the best and most affordable baby products in Bangladesh. Shop clothes, toys, diapers, and more for your little ones.",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://babypyar.com/shop?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        }}
+      />
       {/* Hero Section */}
       <section className="relative py-8 md:py-16 flex items-center justify-center px-4">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-accent/5 rounded-full blur-[100px] pointer-events-none" />

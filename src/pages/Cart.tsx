@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { Trash2, Plus, Minus, ArrowRight } from 'lucide-react';
+import SEO from '../components/SEO';
 
 export default function Cart() {
   const { cart, updateQuantity, removeFromCart, cartTotal } = useCart();
@@ -10,6 +11,7 @@ export default function Cart() {
   if (cart.length === 0) {
     return (
       <div className="py-32 px-6 text-center text-gray-900">
+        <SEO title="Cart" url="https://babypyar.com/cart" />
         <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6 text-gray-400">
           <span className="text-4xl">🛒</span>
         </div>
@@ -24,6 +26,7 @@ export default function Cart() {
 
   return (
     <div className="py-16 px-6 max-w-7xl mx-auto text-gray-900">
+      <SEO title="Cart" url="https://babypyar.com/cart" />
       <h1 className="text-3xl font-black mb-10">আপনার <span className="text-brand">কার্ট</span></h1>
       
       <div className="grid lg:grid-cols-3 gap-10">
