@@ -74,28 +74,31 @@ export const MainLayout = () => {
             <Link 
               key={link.path} 
               to={link.path} 
-              className={`flex flex-col items-center justify-center w-full py-3 ${isActive ? 'text-brand' : 'text-gray-400 hover:text-gray-900'}`}
+              className={`flex flex-col items-center justify-center w-full py-3 relative ${isActive ? 'text-brand' : 'text-gray-400 hover:text-gray-900'}`}
             >
-              <Icon size={20} className={`mb-1 transition-transform ${isActive ? 'scale-110' : ''}`} />
-              <span className="text-[10px] font-bold font-anek">{link.label}</span>
+              {isActive && <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-accent rounded-b-full"></div>}
+              <Icon size={22} className={`mb-1 transition-all ${isActive ? 'scale-110 drop-shadow-md text-accent' : ''}`} />
+              <span className={`text-[10px] font-bold font-anek ${isActive ? 'text-brand' : ''}`}>{link.label}</span>
             </Link>
           );
         })}
         <Link to="/cart" className={`relative flex flex-col items-center justify-center w-full py-3 ${location.pathname === '/cart' ? 'text-brand' : 'text-gray-400 hover:text-gray-900'}`}>
+          {location.pathname === '/cart' && <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-accent rounded-b-full"></div>}
           <div className="relative">
-            <ShoppingCart size={20} className={`mb-1 transition-transform ${location.pathname === '/cart' ? 'scale-110' : ''}`} />
+            <ShoppingCart size={22} className={`mb-1 transition-all ${location.pathname === '/cart' ? 'scale-110 drop-shadow-md text-accent' : ''}`} />
             {cartCount > 0 && (
               <span className="absolute -top-2 -right-2 bg-accent text-brand text-[8px] font-bold w-4 h-4 flex items-center justify-center rounded-full">
                 {cartCount}
               </span>
             )}
           </div>
-          <span className="text-[10px] font-bold font-anek">কার্ট</span>
+          <span className={`text-[10px] font-bold font-anek ${location.pathname === '/cart' ? 'text-brand' : ''}`}>কার্ট</span>
         </Link>
         
-        <Link to={user ? (isAdmin ? '/admin' : '/dashboard') : '/login'} className={`flex flex-col items-center justify-center w-full py-3 ${['/dashboard', '/admin', '/login'].includes(location.pathname) ? 'text-brand' : 'text-gray-400 hover:text-gray-900'}`}>
-          <UserIcon size={20} className={`mb-1 transition-transform ${['/dashboard', '/admin', '/login'].includes(location.pathname) ? 'scale-110' : ''}`} />
-          <span className="text-[10px] font-bold font-anek">{user ? 'প্রোফাইল' : 'লগইন'}</span>
+        <Link to={user ? (isAdmin ? '/admin' : '/dashboard') : '/login'} className={`flex flex-col relative items-center justify-center w-full py-3 ${['/dashboard', '/admin', '/login'].includes(location.pathname) ? 'text-brand' : 'text-gray-400 hover:text-gray-900'}`}>
+          {['/dashboard', '/admin', '/login'].includes(location.pathname) && <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-accent rounded-b-full"></div>}
+          <UserIcon size={22} className={`mb-1 transition-all ${['/dashboard', '/admin', '/login'].includes(location.pathname) ? 'scale-110 drop-shadow-md text-accent' : ''}`} />
+          <span className={`text-[10px] font-bold font-anek ${['/dashboard', '/admin', '/login'].includes(location.pathname) ? 'text-brand' : ''}`}>{user ? 'প্রোফাইল' : 'লগইন'}</span>
         </Link>
       </div>
 

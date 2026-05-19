@@ -3,11 +3,21 @@ import { Search, Package, TrendingUp, CheckCircle, Clock } from 'lucide-react';
 import { db } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
 
+interface OrderData {
+  id?: string;
+  customerPhone?: string;
+  status?: string;
+  createdAt?: any;
+  items?: Array<{ name: string; qty: number; price: number }>;
+  totalAmount?: number;
+  [key: string]: unknown;
+}
+
 export default function OrderTracking() {
   const [orderId, setOrderId] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [loading, setLoading] = useState(false);
-  const [order, setOrder] = useState<any>(null);
+  const [order, setOrder] = useState<OrderData | null>(null);
   const [error, setError] = useState('');
 
   const handleTrack = async (e: React.FormEvent) => {
@@ -33,7 +43,7 @@ export default function OrderTracking() {
         return;
       }
 
-      const orderData = { id: orderSnap.id, ...orderSnap.data() } as any;
+      const orderData = { id: orderSnap.id, ...orderSnap.data() } as OrderData;
 
       if (orderData.customerPhone !== trimmedPhone) {
         setError('এই ফোন নম্বরের সাথে ঐ অর্ডার আইডি মিলছেনা।');
@@ -43,7 +53,7 @@ export default function OrderTracking() {
 
       setOrder(orderData);
       setError('');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error tracking order:', err);
       setError('সার্ভারের সাথে যোগাযোগ করা যাচ্ছে না। দয়া করে ইন্টারনেট সংযোগ চেক করুন এবং সঠিক আইডি দিচ্ছেন কিনা নিশ্চিত হোন।');
     } finally {
@@ -201,7 +211,7 @@ export default function OrderTracking() {
               
               <h3 className="text-lg font-bold text-gray-900 mb-4 border-b border-gray-100 pb-2">অর্ডারের বিবরণ</h3>
               <div className="space-y-4 mb-6">
-                {order.items?.map((item: any, idx: number) => (
+                {Array.isArray(order.items) && order.items.map((item, idx: number) => (
                   <div key={idx} className="flex justify-between text-gray-700 items-center">
                     <span className="flex-1 product-name">{item.name} <span className="text-gray-400 font-normal">x{item.qty}</span></span>
                     <span className="font-medium">৳ {(item.price * item.qty).toLocaleString('bn-BD')}</span>
