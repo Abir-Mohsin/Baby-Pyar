@@ -73,6 +73,21 @@
       },
       "required": ["userId", "content", "rating"]
     },
+    "ProductReview": {
+      "title": "ProductReview",
+      "description": "Reviews of products by users",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "productId": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "text": { "type": "string" },
+        "rating": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["productId", "userId", "text", "rating"]
+    },
     "Settings": {
       "title": "Settings",
       "description": "App settings",
@@ -99,6 +114,10 @@
     "testimonials": {
       "schema": "Testimonial",
       "description": "Customer feedback"
+    },
+    "product_reviews": {
+      "schema": "ProductReview",
+      "description": "Product reviews from customers"
     },
     "settings": {
       "schema": "Settings",

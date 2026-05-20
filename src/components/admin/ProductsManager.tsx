@@ -220,10 +220,13 @@ export default function ProductsManager() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-500 font-medium mb-1">অপশনসমূহ (কমা দিয়ে আলাদা করুন)</label>
+                  <label className="block text-xs text-gray-500 font-medium mb-1">
+                    অপশনসমূহ <span className="text-brand">(ফরম্যাট: Option|Price)</span>
+                  </label>
+                  <p className="text-[10px] text-gray-400 mb-2">কমা দিয়ে আলাদা করুন। যেমন: <code className="bg-gray-100 px-1 rounded text-gray-600">S|0, M|50, L|100</code> (মূল দামের সাথে টাকা যোগ বা বিয়োগ হবে)</p>
                   <input 
                     type="text" 
-                    className="w-full bg-gray-50 border border-gray-300 p-2 rounded-lg outline-none focus:ring-1 focus:ring-accent focus:border-brand" 
+                    className="w-full bg-gray-50 border border-gray-300 p-2 rounded-lg outline-none focus:ring-1 focus:ring-accent focus:border-brand font-mono text-sm" 
                     value={variation.options.join(', ')} 
                     onChange={e => {
                       const newVars = [...formData.variations];
@@ -232,7 +235,7 @@ export default function ProductsManager() {
                       newVars[index].options = e.target.value.split(',');
                       setFormData({ ...formData, variations: newVars });
                     }} 
-                    placeholder="S, M, L, XL"
+                    placeholder="S|0, M|50, L|100"
                   />
                 </div>
               </div>

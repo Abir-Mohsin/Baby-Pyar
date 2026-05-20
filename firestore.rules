@@ -50,10 +50,22 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    // Product reviews collection
+    match /product_reviews/{reviewId} {
+      allow read: if true;
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
     // Settings collection
     match /settings/{settingId} {
       allow read: if true;
       allow write: if isAdmin();
+    }
+
+    // Test collection for testConnection()
+    match /test/{testId} {
+      allow read, write: if true;
     }
   }
 }

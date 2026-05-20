@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { db } from '../firebase';
-import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp, orderBy } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 import { DUMMY_PRODUCTS } from './Home';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -9,6 +10,7 @@ import { ShoppingBag, Heart } from 'lucide-react';
 import toast from 'react-hot-toast';
 import SEO from '../components/SEO';
 import { formatImageUrl } from '../utils/formatImage';
+import { parseVariationOption, calculateAdjustedPrice } from '../utils/variationUtils';
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -55,11 +57,18 @@ export default function ProductDetails() {
     const fetchReviews = async () => {
       if (!id) return;
       try {
-        const q = query(collection(db, 'product_reviews'), where('productId', '==', id), orderBy('createdAt', 'desc'));
+        const q = query(collection(db, 'product_reviews'), where('productId', '==', id));
         const snapshot = await getDocs(q);
-        setReviews(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+        const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        // Sort in memory to avoid needing a composite index
+        docs.sort((a: any, b: any) => {
+          const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+          const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+          return timeB - timeA;
+        });
+        setReviews(docs);
       } catch (error) {
-        console.error('Error fetching reviews:', error);
+        console.error('Failed to fetch product reviews from database:', error);
       }
     };
 
@@ -67,21 +76,49 @@ export default function ProductDetails() {
     fetchReviews();
   }, [id]);
 
-  if (loading) return <div className="py-20 text-center text-gray-500">লোড হচ্ছে...</div>;
-  if (!product) return <div className="py-20 text-center text-gray-500">প্রোডাক্ট পাওয়া যায়নি।</div>;
-
-  const original = product.originalPrice || product.price;
   // Backwards compatibility for parsing variations
-  const productVariations = product.variations || [];
-  if (productVariations.length === 0 && product.variationType && product.variationType !== 'none') {
+  const productVariations = product?.variations || [];
+  if (product && productVariations.length === 0 && product.variationType && product.variationType !== 'none') {
     productVariations.push({
       name: product.variationType === 'size' ? 'Size' : product.variationType === 'age' ? 'Age' : product.variationType,
       options: product.availableVariations || []
     });
   }
 
-  const variationsString = Object.keys(selectedVariations).length > 0 
-    ? Object.entries(selectedVariations).map(([k, v]) => `${k}: ${v}`).join(', ') 
+  const defaultVars: Record<string, string> = {};
+  if (product && productVariations.length > 0) {
+    productVariations.forEach((v: any) => {
+      let lowestOptionStr = v.options[0];
+      let lowestAmount = Infinity;
+      v.options.forEach((opt: string) => {
+        const parsed = parseVariationOption(opt);
+        if (parsed.priceDiff < lowestAmount) {
+           lowestAmount = parsed.priceDiff;
+           lowestOptionStr = opt;
+        }
+      });
+      defaultVars[v.name] = lowestOptionStr || v.options[0];
+    });
+  }
+
+  // Merge defaults with selected to ensure all variations have a value
+  const activeVariations = { ...defaultVars, ...selectedVariations };
+
+  if (loading) return <div className="py-20 text-center text-gray-500">লোড হচ্ছে...</div>;
+  if (!product) return <div className="py-20 text-center text-gray-500">প্রোডাক্ট পাওয়া যায়নি।</div>;
+
+  const basePrice = product.price;
+  const original = product.originalPrice || basePrice;
+  
+  const selectedOptionsList = Object.values(activeVariations) as string[];
+  const finalPrice = calculateAdjustedPrice(basePrice, selectedOptionsList, productVariations) || basePrice;
+  const hasDiscount = original > basePrice;
+  // If baseline has discount, apply same flat adjustment to original price
+  const finalOriginalPrice = hasDiscount ? calculateAdjustedPrice(original, selectedOptionsList, productVariations) : original;
+
+  // The formatted string for Cart (without | priceDiff)
+  const variationsString = Object.keys(activeVariations).length > 0 
+    ? Object.entries(activeVariations).map(([k, v]) => `${k}: ${parseVariationOption(v as string).label}`).join(', ') 
     : undefined;
 
   const inCart = cart.some(item => 
@@ -92,7 +129,7 @@ export default function ProductDetails() {
   const handleAddToCart = () => {
     // Check if all variations are selected
     if (productVariations.length > 0) {
-      const missing = productVariations.find((v: any) => !selectedVariations[v.name]);
+      const missing = productVariations.find((v: any) => !activeVariations[v.name]);
       if (missing) {
         toast.error(`অনুগ্রহ করে ${missing.name} নির্বাচন করুন`);
         return;
@@ -102,7 +139,7 @@ export default function ProductDetails() {
     addToCart({ 
       id: product.id, 
       name: product.name, 
-      price: product.price, 
+      price: finalPrice, 
       image: product.image,
       variation: variationsString
     }, qty);
@@ -131,12 +168,18 @@ export default function ProductDetails() {
       setNewReviewText('');
       setNewReviewRating(5);
       
-      const q = query(collection(db, 'product_reviews'), where('productId', '==', id), orderBy('createdAt', 'desc'));
+      const q = query(collection(db, 'product_reviews'), where('productId', '==', id));
       const snapshot = await getDocs(q);
-      setReviews(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
-    } catch (err) {
-      console.error(err);
-      toast.error('রিভিউ দিতে সমস্যা হয়েছে');
+      const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      docs.sort((a: any, b: any) => {
+        const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : Date.now(); // Assume new review is now if no timestamp yet (pending)
+        const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : Date.now();
+        return timeB - timeA;
+      });
+      setReviews(docs);
+    } catch (err: any) {
+      console.error('Add review error:', err);
+      toast.error('রিভিউ দিতে সমস্যা হয়েছে: ' + (err.message || 'Unknown error'));
     } finally {
       setSubmittingReview(false);
     }
@@ -202,11 +245,16 @@ export default function ProductDetails() {
           </div>
           
           <div className="flex flex-wrap items-center gap-4 mb-8">
-            <span className="text-4xl font-extrabold text-gray-900">
-              ৳ {product.price.toLocaleString('bn-BD')}
+            <span className="text-4xl font-extrabold text-gray-900 transition-all">
+              ৳ {finalPrice.toLocaleString('bn-BD')}
             </span>
-            {product.price < original && (
-              <span className="text-xl text-gray-400 line-through">৳ {original.toLocaleString('bn-BD')}</span>
+            {finalPrice < finalOriginalPrice && (
+              <span className="text-xl text-gray-400 line-through transition-all">৳ {finalOriginalPrice.toLocaleString('bn-BD')}</span>
+            )}
+            {finalPrice < finalOriginalPrice && (
+              <span className="bg-brand/10 text-brand px-3 py-1 rounded-full text-sm font-bold">
+                Save {Math.round(((finalOriginalPrice - finalPrice) / finalOriginalPrice) * 100)}%
+              </span>
             )}
           </div>
 
@@ -221,15 +269,22 @@ export default function ProductDetails() {
                     {v.name} নির্বাচন করুন <span className="text-brand">*</span>
                   </label>
                   <div className="flex flex-wrap gap-3">
-                    {v.options.map((option: string) => (
+                    {v.options.map((option: string) => {
+                      const parsedOpt = parseVariationOption(option);
+                      return (
                       <button
                         key={option}
-                        onClick={() => setSelectedVariations({...selectedVariations, [v.name]: option})}
-                        className={`px-5 py-2 rounded-xl border-2 font-bold transition-all ${selectedVariations[v.name] === option ? 'border-brand text-brand bg-accent/5' : 'border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'}`}
+                        onClick={() => setSelectedVariations({...activeVariations, [v.name]: option})}
+                        className={`px-5 py-2 rounded-xl border-2 font-bold transition-all flex flex-col items-center ${activeVariations[v.name] === option ? 'border-brand text-brand bg-accent/5 shadow-sm' : 'border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'}`}
                       >
-                        {option}
+                        <span>{parsedOpt.label}</span>
+                        {parsedOpt.priceDiff !== 0 && (
+                           <span className="text-[10px] font-normal opacity-80 mt-0.5">
+                             {parsedOpt.priceDiff > 0 ? '+' : ''}৳ {parsedOpt.priceDiff.toLocaleString('bn-BD')}
+                           </span>
+                        )}
                       </button>
-                    ))}
+                    )})}
                   </div>
                 </div>
               ))}
