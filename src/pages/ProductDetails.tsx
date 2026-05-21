@@ -6,7 +6,7 @@ import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp
 import { DUMMY_PRODUCTS } from './Home';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { ShoppingBag, Heart } from 'lucide-react';
+import { ShoppingBag, Heart, Share2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import SEO from '../components/SEO';
 import { formatImageUrl } from '../utils/formatImage';
@@ -103,6 +103,11 @@ export default function ProductDetails() {
 
   // Merge defaults with selected to ensure all variations have a value
   const activeVariations = { ...defaultVars, ...selectedVariations };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    toast.success('লিংক কপি করা হয়েছে!');
+  };
 
   if (loading) return <div className="py-20 text-center text-gray-500">লোড হচ্ছে...</div>;
   if (!product) return <div className="py-20 text-center text-gray-500">প্রোডাক্ট পাওয়া যায়নি।</div>;
@@ -236,8 +241,17 @@ export default function ProductDetails() {
           )}
         </div>
         
-        <div className="md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
-          <div className="product-category text-brand font-bold uppercase tracking-widest text-xs mb-3">{product.category}</div>
+        <div className="md:w-1/2 p-8 md:p-12 flex flex-col justify-center relative">
+          <div className="flex justify-between items-start mb-3">
+            <div className="product-category text-brand font-bold uppercase tracking-widest text-xs">{product.category}</div>
+            <button 
+              onClick={handleCopyLink}
+              className="p-2 bg-gray-50 hover:bg-brand/10 text-gray-500 hover:text-brand rounded-full transition-colors flex items-center justify-center cursor-pointer"
+              title="লিংক কপি করুন"
+            >
+              <Share2 size={18} />
+            </button>
+          </div>
           <h1 className="product-name text-3xl md:text-5xl font-black mb-4">{product.name}</h1>
           
           <div className="flex items-center gap-2 mb-6">
