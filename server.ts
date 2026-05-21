@@ -8,12 +8,12 @@ export function formatImageUrl(url: string) {
   if (url.includes('drive.google.com/file/d/')) {
     const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
     if (match && match[1]) {
-      return `https://lh3.googleusercontent.com/d/${match[1]}`;
+      return `https://lh3.googleusercontent.com/d/${match[1]}=w1200-h630-p`;
     }
   } else if (url.includes('drive.google.com/open?id=')) {
      const match = url.match(/id=([a-zA-Z0-9_-]+)/);
      if (match && match[1]) {
-       return `https://lh3.googleusercontent.com/d/${match[1]}`;
+       return `https://lh3.googleusercontent.com/d/${match[1]}=w1200-h630-p`;
      }
   }
   return url;
@@ -101,23 +101,33 @@ async function startServer() {
       }
 
       // Check if it's a product page request
-      const productMatch = url.match(/\/product\/([^\/?]+)/);
+      const urlWithoutQuery = url.split('?')[0];
+      const productMatch = urlWithoutQuery.match(/\/product\/([^\/?]+)/);
       if (productMatch && productMatch[1]) {
         const productId = productMatch[1];
         const product = await getProduct(productId);
         
         if (product) {
           const imageUrl = formatImageUrl(product.image);
-          // Inject meta tags
+          const fullUrl = `https://${req.get('host')}${urlWithoutQuery}`;
+          // Inject meta tags for Facebook and Twitter
           const metaTags = `
+            <meta property="og:type" content="product" />
+            <meta property="og:site_name" content="Baby Pyar" />
             <meta property="og:title" content="${product.name}" />
             <meta property="og:description" content="${product.description}" />
             <meta property="og:image" content="${imageUrl}" />
-            <meta property="og:url" content="https://babypyar.com/product/${product.id}" />
-            <meta property="twitter:card" content="summary_large_image" />
-            <meta property="twitter:title" content="${product.name}" />
-            <meta property="twitter:description" content="${product.description}" />
-            <meta property="twitter:image" content="${imageUrl}" />
+            <meta property="og:image:secure_url" content="${imageUrl}" />
+            <meta property="og:image:type" content="image/jpeg" />
+            <meta property="og:image:width" content="1200" />
+            <meta property="og:image:height" content="630" />
+            <meta property="og:url" content="${fullUrl}" />
+            <meta property="product:price:amount" content="1000" />
+            <meta property="product:price:currency" content="BDT" />
+            <meta name="twitter:card" content="summary_large_image" />
+            <meta name="twitter:title" content="${product.name}" />
+            <meta name="twitter:description" content="${product.description}" />
+            <meta name="twitter:image" content="${imageUrl}" />
           `;
           
           template = template.replace('</head>', `${metaTags}</head>`);
