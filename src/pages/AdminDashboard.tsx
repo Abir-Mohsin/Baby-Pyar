@@ -8,10 +8,11 @@ import HomeSettingsManager from '../components/admin/HomeSettingsManager';
 import PagesSettingsManager from '../components/admin/PagesSettingsManager';
 import TestimonialsManager from '../components/admin/TestimonialsManager';
 import OverviewManager from '../components/admin/OverviewManager';
+import BlogManager from '../components/admin/BlogManager';
 
 export default function AdminDashboard() {
   const { isAdmin, loading: authLoading } = useAuth();
-  const [tab, setTab] = useState<'overview'|'orders'|'products'|'home'|'pages'|'testimonials'>('overview');
+  const [tab, setTab] = useState<'overview'|'orders'|'products'|'blog'|'home'|'pages'|'testimonials'>('overview');
 
   if (authLoading) return <div className="py-20 text-center">লোড হচ্ছে...</div>;
   if (!isAdmin) return <Navigate to="/dashboard" />;
@@ -20,6 +21,7 @@ export default function AdminDashboard() {
     { id: 'overview', label: 'ওভারভিউ' },
     { id: 'orders', label: 'অর্ডার' },
     { id: 'products', label: 'প্রোডাক্ট' },
+    { id: 'blog', label: 'ব্লগ ম্যানাজমেন্ট' },
     { id: 'home', label: 'হোমপেজ সেটিং' },
     { id: 'pages', label: 'পেইজ সেটিং' },
     { id: 'testimonials', label: 'রিভিউ' }
@@ -54,6 +56,7 @@ export default function AdminDashboard() {
          {tab === 'overview' && <OverviewManager />}
          {tab === 'orders' && <OrdersManager />}
          {tab === 'products' && <ProductsManager />}
+         {tab === 'blog' && <BlogManager />}
          {tab === 'home' && <HomeSettingsManager />}
          {tab === 'pages' && <PagesSettingsManager />}
          {tab === 'testimonials' && <TestimonialsManager />}

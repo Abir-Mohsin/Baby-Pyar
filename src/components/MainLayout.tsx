@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { Menu, X, ShoppingCart, User as UserIcon, LogOut, Home, Store, MapPin } from 'lucide-react';
+import { Menu, X, ShoppingCart, User as UserIcon, LogOut, Home, Store, MapPin, Facebook, Youtube, BookOpen } from 'lucide-react';
 
 export const MainLayout = () => {
   const { user, userData, isAdmin, logout } = useAuth();
@@ -14,6 +14,7 @@ export const MainLayout = () => {
     { label: 'হোম', path: '/', icon: Home },
     { label: 'প্রোডাক্ট', path: '/shop', icon: Store },
     { label: 'ট্র্যাকিং', path: '/tracking', icon: MapPin },
+    { label: 'ব্লগ', path: '/blog', icon: BookOpen },
   ];
 
   return (
@@ -120,9 +121,19 @@ export const MainLayout = () => {
 
       <footer className="bg-brand border-t border-black/10 py-10 pb-28 md:pb-10 px-4 mt-auto text-white/80">
         <div className="max-w-7xl mx-auto text-center">
-              <div className="text-white mb-4">
+              <div className="text-white mb-6">
             <img src="https://lh3.googleusercontent.com/d/1E5PnXNEVOpyKQf9Z_ZXVw4x3BCdI4SMC" alt="Baby Pyar" className="h-8 md:h-10 object-contain mx-auto" />
           </div>
+          
+          <div className="flex justify-center gap-4 mb-6">
+            <a href="https://www.facebook.com/babypyar24" target="_blank" rel="noopener noreferrer" className="p-2.5 bg-white/10 hover:bg-accent hover:text-brand rounded-full text-white transition-all shadow-sm">
+              <Facebook size={20} />
+            </a>
+            <a href="https://www.youtube.com/@BabyPyar" target="_blank" rel="noopener noreferrer" className="p-2.5 bg-white/10 hover:bg-accent hover:text-brand rounded-full text-white transition-all shadow-sm">
+              <Youtube size={20} />
+            </a>
+          </div>
+
           <p className="text-white/70 text-sm mb-4">© 2026 Baby Pyar. সর্বস্বত্ব সংরক্ষিত।</p>
           <div className="flex justify-center gap-6 text-sm">
             <Link to="/privacy" className="text-white/80 hover:text-white font-medium transition-colors">প্রাইভেসি পলিসি</Link>

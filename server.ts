@@ -8,12 +8,12 @@ export function formatImageUrl(url: string) {
   if (url.includes('drive.google.com/file/d/')) {
     const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
     if (match && match[1]) {
-      return `https://lh3.googleusercontent.com/d/${match[1]}=w1200-h630-p`;
+      return `https://drive.google.com/uc?export=view&id=${match[1]}`;
     }
   } else if (url.includes('drive.google.com/open?id=')) {
      const match = url.match(/id=([a-zA-Z0-9_-]+)/);
      if (match && match[1]) {
-       return `https://lh3.googleusercontent.com/d/${match[1]}=w1200-h630-p`;
+       return `https://drive.google.com/uc?export=view&id=${match[1]}`;
      }
   }
   return url;
@@ -110,7 +110,7 @@ async function startServer() {
         if (product) {
           const imageUrl = formatImageUrl(product.image);
           const fullUrl = `https://${req.get('host')}${urlWithoutQuery}`;
-          // Inject meta tags for Facebook and Twitter
+          // Inject meta tags for Facebook and Twitter + JSON-LD Schema
           const metaTags = `
             <meta property="og:type" content="product" />
             <meta property="og:site_name" content="Baby Pyar" />
@@ -128,6 +128,29 @@ async function startServer() {
             <meta name="twitter:title" content="${product.name}" />
             <meta name="twitter:description" content="${product.description}" />
             <meta name="twitter:image" content="${imageUrl}" />
+            <script type="application/ld+json">
+            {
+              "@context": "https://schema.org/",
+              "@type": "Product",
+              "name": "${product.name}",
+              "image": [
+                "${imageUrl}"
+              ],
+              "description": "${product.description}",
+              "brand": {
+                "@type": "Brand",
+                "name": "Baby Pyar"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": "${fullUrl}",
+                "priceCurrency": "BDT",
+                "price": "1000",
+                "availability": "https://schema.org/InStock",
+                "itemCondition": "https://schema.org/NewCondition"
+              }
+            }
+            </script>
           `;
           
           template = template.replace('</head>', `${metaTags}</head>`);

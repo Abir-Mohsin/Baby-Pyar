@@ -57,6 +57,12 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    // Blog posts collection
+    match /blog_posts/{postId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // Settings collection
     match /settings/{settingId} {
       allow read: if true;

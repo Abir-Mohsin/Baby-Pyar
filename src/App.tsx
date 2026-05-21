@@ -7,6 +7,8 @@ import { MainLayout } from './components/MainLayout';
 import Home from './pages/Home';
 import Shop from './pages/Shop';
 import ProductDetails from './pages/ProductDetails';
+import Blog from './pages/Blog';
+import BlogPost from './pages/BlogPost';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import Dashboard from './pages/Dashboard';
@@ -32,6 +34,8 @@ export default function App() {
                 <Route index element={<Home />} />
                 <Route path="shop" element={<Shop />} />
                 <Route path="product/:id" element={<ProductDetails />} />
+                <Route path="blog" element={<Blog />} />
+                <Route path="blog/:id" element={<BlogPost />} />
                 <Route path="privacy" element={<PrivacyPolicy />} />
                 <Route path="return" element={<ReturnPolicy />} />
                 <Route path="contact" element={<Contact />} />
