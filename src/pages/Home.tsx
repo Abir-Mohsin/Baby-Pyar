@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingBag, Send, PlayCircle, Star, Heart, Search } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useCart } from '../context/CartContext';
@@ -57,6 +57,7 @@ export const DUMMY_PRODUCTS = [
 ];
 
 export default function Home() {
+  const navigate = useNavigate();
   const { addToCart, cart } = useCart();
   const [products, setProducts] = useState<any[]>(DUMMY_PRODUCTS);
   const [loading, setLoading] = useState(true);
@@ -239,12 +240,12 @@ export default function Home() {
                   whileTap={{ scale: 0.98 }}
                   className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all group flex flex-col h-full border border-gray-100"
                 >
-                  <div className="relative aspect-square md:aspect-[4/3] overflow-hidden bg-gray-100">
+                  <Link to={`/product/${product.id}`} className="relative aspect-square md:aspect-[4/3] overflow-hidden bg-gray-100 block">
                     <img src={formatImageUrl(product.image)} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     {product.badge && (
                       <span className="absolute top-2 left-2 md:top-4 md:left-4 bg-white/90 backdrop-blur text-brand px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[10px] md:text-xs font-bold z-10 shadow-sm">{product.badge}</span>
                     )}
-                  </div>
+                  </Link>
                   <div className="p-3 md:p-5 flex flex-col flex-grow">
                     <div className="product-category text-[10px] md:text-xs text-brand font-bold uppercase tracking-wider mb-1 md:mb-2 line-clamp-1">{product.category}</div>
                     <Link to={`/product/${product.id}`} className="product-name text-sm md:text-lg font-bold mb-2 text-gray-900 hover:text-brand transition-colors block line-clamp-2">{product.name}</Link>
@@ -270,10 +271,10 @@ export default function Home() {
 
                       {inCart ? (
                         <Link 
-                          to="/cart"
+                          to="/checkout"
                           className="w-full py-2 md:py-3.5 bg-brand hover:bg-brand-hover text-white rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center justify-center gap-1.5 md:gap-2"
                         >
-                          চেকআউট
+                          অর্ডার করুন
                         </Link>
                       ) : (product.variation_type && product.variation_type !== 'none') ? (
                         <Link 
@@ -284,10 +285,14 @@ export default function Home() {
                         </Link>
                       ) : (
                         <button 
-                          onClick={() => addToCart({ id: product.id, name: product.name, price: product.price, image: product.image })}
-                          className="w-full py-2 md:py-3.5 bg-gray-50 hover:bg-accent hover:text-gray-900 text-gray-800 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center justify-center gap-1.5 md:gap-2"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            addToCart({ id: product.id, name: product.name, price: product.price, image: product.image });
+                            navigate('/checkout');
+                          }}
+                          className="w-full py-2 md:py-3.5 bg-brand hover:bg-brand-hover text-white rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center justify-center gap-1.5 md:gap-2"
                         >
-                          কার্টে যোগ
+                          অর্ডার করুন
                         </button>
                       )}
                     </div>

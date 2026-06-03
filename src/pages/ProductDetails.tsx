@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
 import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 import { DUMMY_PRODUCTS } from './Home';
@@ -14,6 +14,7 @@ import { parseVariationOption, calculateAdjustedPrice } from '../utils/variation
 
 export default function ProductDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { addToCart, cart } = useCart();
   const { user } = useAuth();
   const [product, setProduct] = useState<any>(null);
@@ -131,7 +132,7 @@ export default function ProductDetails() {
     (item.variation === variationsString || (!item.variation && !variationsString))
   );
 
-  const handleAddToCart = () => {
+  const handleAddToCart = (shouldRedirect = false) => {
     // Check if all variations are selected
     if (productVariations.length > 0) {
       const missing = productVariations.find((v: any) => !activeVariations[v.name]);
@@ -148,6 +149,12 @@ export default function ProductDetails() {
       image: product.image,
       variation: variationsString
     }, qty);
+    
+    if (shouldRedirect) {
+      navigate('/checkout');
+    } else {
+      toast.success('কার্টে যোগ করা হয়েছে');
+    }
   };
 
   const handleAddReview = async (e: React.FormEvent) => {
@@ -316,19 +323,27 @@ export default function ProductDetails() {
              
              {inCart ? (
                <Link 
-                 to="/cart"
+                 to="/checkout"
                  className="flex-1 bg-brand hover:bg-brand-hover text-white rounded-xl font-bold flex items-center justify-center gap-2 px-6 py-4 shadow-sm transition-all"
                >
-                 চেকআউট
+                 অর্ডার করুন
                </Link>
              ) : (
-               <button 
-                 onClick={handleAddToCart}
-                 className="flex-1 bg-accent hover:bg-accent-hover text-gray-900 rounded-xl font-bold flex items-center justify-center gap-2 px-6 py-4 shadow-sm transition-all"
-               >
-                  <ShoppingBag size={20} />
-                  কার্টে যোগ করুন
-               </button>
+               <>
+                 <button 
+                   onClick={() => handleAddToCart(false)}
+                   className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-xl font-bold flex items-center justify-center gap-2 px-6 py-4 shadow-sm transition-all"
+                 >
+                    <ShoppingBag size={20} />
+                    কার্টে যোগ করুন
+                 </button>
+                 <button 
+                   onClick={() => handleAddToCart(true)}
+                   className="flex-1 bg-brand hover:bg-brand-hover text-white rounded-xl font-bold flex items-center justify-center gap-2 px-6 py-4 shadow-sm transition-all"
+                 >
+                    অর্ডার করুন
+                 </button>
+               </>
              )}
              
              <button className="w-14 h-14 bg-gray-50 border border-gray-200 rounded-xl flex items-center justify-center text-gray-400 hover:text-brand hover:bg-gray-100 transition-colors">

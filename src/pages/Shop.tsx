@@ -7,12 +7,14 @@ import { ShoppingBag, Star, Heart } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useCart } from '../context/CartContext';
 import { handleFirestoreError, OperationType } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import SEO from '../components/SEO';
 import { formatImageUrl } from '../utils/formatImage';
 
 export default function Shop() {
   const { addToCart, cart } = useCart();
+  const navigate = useNavigate();
   const [products, setProducts] = useState<any[]>(DUMMY_PRODUCTS);
   const [loading, setLoading] = useState(true);
 
@@ -85,10 +87,10 @@ export default function Shop() {
                   whileTap={{ scale: 0.98 }}
                   className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-lg transition-all flex flex-col h-full group"
                 >
-                  <div className="relative aspect-square overflow-hidden bg-gray-100">
+                  <Link to={`/product/${product.id}`} className="relative aspect-square overflow-hidden bg-gray-100 block">
                     <img src={formatImageUrl(product.image)} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     {product.badge && <span className="absolute top-2 left-2 md:top-3 md:left-3 bg-white/90 backdrop-blur text-brand px-2 py-0.5 md:py-1 rounded-full text-[10px] md:text-xs font-bold z-10 shadow-sm">{product.badge}</span>}
-                  </div>
+                  </Link>
                   <div className="p-3 md:p-5 flex flex-col flex-grow">
                     <div className="product-category text-[10px] md:text-xs text-brand font-bold uppercase tracking-wider mb-1 line-clamp-1">{product.category}</div>
                     <Link to={`/product/${product.id}`} className="product-name text-sm md:text-lg font-bold mb-2 text-gray-900 hover:text-brand block line-clamp-2 leading-tight">{product.name}</Link>
@@ -110,10 +112,10 @@ export default function Shop() {
 
                       {inCart ? (
                         <Link 
-                          to="/cart"
+                          to="/checkout"
                           className="w-full py-2.5 bg-brand hover:bg-brand-hover text-white rounded-xl font-semibold transition-colors flex items-center justify-center gap-2 text-xs md:text-sm"
                         >
-                          চেকআউট
+                          অর্ডার করুন
                         </Link>
                       ) : (product.variation_type && product.variation_type !== 'none') ? (
                         <Link 
@@ -124,10 +126,13 @@ export default function Shop() {
                         </Link>
                       ) : (
                         <button 
-                          onClick={() => addToCart({ id: product.id, name: product.name, price: product.price, image: product.image })}
-                          className="w-full py-2.5 bg-gray-50 hover:bg-accent hover:text-gray-900 text-gray-800 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2 text-xs md:text-sm"
+                          onClick={() => {
+                            addToCart({ id: product.id, name: product.name, price: product.price, image: product.image });
+                            navigate('/checkout');
+                          }}
+                          className="w-full py-2.5 bg-brand hover:bg-brand-hover text-white rounded-xl font-semibold transition-colors flex items-center justify-center gap-2 text-xs md:text-sm"
                         >
-                          কার্টে যোগ
+                          অর্ডার করুন
                         </button>
                       )}
                     </div>
