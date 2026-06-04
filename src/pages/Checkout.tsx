@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { useAuth, handleFirestoreError, OperationType } from '../context/AuthContext';
 import { db } from '../firebase';
@@ -15,12 +15,20 @@ export default function Checkout() {
   
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [address, setAddress] = useState('');
   const [note, setNote] = useState('');
   const [deliveryArea, setDeliveryArea] = useState<'inside' | 'outside'>('inside');
   const [paymentMethod, setPaymentMethod] = useState<'bkash' | 'cod'>('bkash');
   const [trxId, setTrxId] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      if (!name && user.displayName) setName(user.displayName);
+      if (!email && user.email) setEmail(user.email);
+    }
+  }, [user]);
 
   const deliveryCharge = deliveryArea === 'inside' ? 70 : 120;
   const discount = paymentMethod === 'bkash' ? Math.round(cartTotal * 0.1) : 0;
@@ -79,6 +87,34 @@ export default function Checkout() {
       const docRef = await addDoc(collection(db, orderPath), orderData);
       
       console.log('Order created successfully with ID:', docRef.id);
+
+      // Trigger automatic email for admin using FormSubmit
+      try {
+        const orderDetails = cart.map(item => `${item.name} x ${item.quantity} (৳${item.price * item.quantity})`).join('\n');
+        
+        fetch('https://formsubmit.co/ajax/abirmohsin02@gmail.com', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            _subject: `New Order Received! #${docRef.id}`,
+            _template: 'table',
+            Name: name,
+            Phone: phone,
+            Email: email || 'Not provided',
+            Address: address,
+            Order_ID: docRef.id,
+            Total: `৳${finalTotal}`,
+            Items: orderDetails,
+            Note: note
+          })
+        }).catch(err => console.error("Failed to trigger FormSubmit:", err));
+      } catch(e) {
+        console.error("FormSubmit send trigger failed", e);
+      }
+
       if (user) {
         toast.success('অর্ডার সফল হয়েছে!');
         navigate('/dashboard');
@@ -114,6 +150,10 @@ export default function Checkout() {
             <div>
               <label className="block text-sm font-medium mb-2 text-gray-700">মোবাইল নম্বর <span className="text-brand">*</span></label>
               <input required value={phone} onChange={e => setPhone(e.target.value)} type="tel" className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-brand transition-all" placeholder="01XXXXXXXXX" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2 text-gray-700">ইমেইল <span className="text-gray-400 font-normal">(অপশনাল, কনফার্মেশন এর জন্য)</span></label>
+              <input value={email} onChange={e => setEmail(e.target.value)} type="email" className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-brand transition-all" placeholder="example@example.com" />
             </div>
             <div>
               <label className="block text-sm font-medium mb-2 text-gray-700">ঠিকানা <span className="text-brand">*</span></label>

@@ -22,6 +22,8 @@ import Signup from './pages/Signup';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import ScrollToTop from './components/ScrollToTop';
 
+import NotFound from './pages/NotFound';
+
 export default function App() {
   return (
     <HelmetProvider>
@@ -34,6 +36,7 @@ export default function App() {
                 <Route index element={<Home />} />
                 <Route path="shop" element={<Shop />} />
                 <Route path="product/:id" element={<ProductDetails />} />
+                <Route path="product/:slug/:id" element={<ProductDetails />} />
                 <Route path="blog" element={<Blog />} />
                 <Route path="blog/:id" element={<BlogPost />} />
                 <Route path="privacy" element={<PrivacyPolicy />} />
@@ -46,6 +49,7 @@ export default function App() {
                 <Route path="admin" element={<ProtectedRoute requireAdmin={true}><AdminDashboard /></ProtectedRoute>} />
                 <Route path="login" element={<Login />} />
                 <Route path="signup" element={<Signup />} />
+                <Route path="*" element={<NotFound />} />
               </Route>
             </Routes>
           </Router>

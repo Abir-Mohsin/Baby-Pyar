@@ -19,6 +19,16 @@ export function formatImageUrl(url: string) {
   return url;
 }
 
+function escapeHtml(unsafe: string) {
+  if (!unsafe) return '';
+  return String(unsafe)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 const DUMMY_PRODUCTS = [
   {
     id: 'p1',
@@ -71,8 +81,76 @@ async function startServer() {
   const PORT = process.env.PORT || 3000;
   const isProd = process.env.NODE_ENV === 'production';
 
+  app.use(express.json());
+
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok' });
+  });
+
+  app.get('/sitemap.xml', async (req, res) => {
+    try {
+      // Get all products. In a real app we might want to paginate or cache, but for now we fetch all we can reasonably get.
+      let productLinks = '';
+      try {
+        const firestoreUrl = 'https://firestore.googleapis.com/v1/projects/baby-pyar/databases/(default)/documents/products';
+        const fpRes = await fetch(firestoreUrl);
+        if (fpRes.ok) {
+          const data: any = await fpRes.json();
+          if (data.documents) {
+            data.documents.forEach((doc: any) => {
+              const id = doc.name.split('/').pop();
+              productLinks += `
+  <url>
+    <loc>https://babypyar.com/product/${id}</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>`;
+            });
+          }
+        }
+      } catch (e) {
+        console.error('Error fetching products for sitemap:', e);
+      }
+
+      const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://babypyar.com/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://babypyar.com/shop</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>${productLinks}
+  <url>
+    <loc>https://babypyar.com/tracking</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://babypyar.com/contact</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://babypyar.com/privacy</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://babypyar.com/return</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+</urlset>`;
+      
+      res.header('Content-Type', 'application/xml');
+      res.send(sitemap);
+    } catch (e) {
+      res.status(500).end();
+    }
   });
 
   let vite: any;
@@ -102,20 +180,23 @@ async function startServer() {
 
       // Check if it's a product page request
       const urlWithoutQuery = url.split('?')[0];
-      const productMatch = urlWithoutQuery.match(/\/product\/([^\/?]+)/);
-      if (productMatch && productMatch[1]) {
-        const productId = productMatch[1];
+      const segments = urlWithoutQuery.split('/').filter(Boolean);
+      
+      if (segments[0] === 'product' && segments.length >= 2) {
+        const productId = segments[segments.length - 1]; // last segment is the ID
         const product = await getProduct(productId);
         
         if (product) {
           const imageUrl = formatImageUrl(product.image);
           const fullUrl = `https://${req.get('host')}${urlWithoutQuery}`;
+          const safeName = escapeHtml(product.name);
+          const safeDesc = escapeHtml(product.description || product.name);
           // Inject meta tags for Facebook and Twitter + JSON-LD Schema
           const metaTags = `
             <meta property="og:type" content="product" />
             <meta property="og:site_name" content="Baby Pyar" />
-            <meta property="og:title" content="${product.name}" />
-            <meta property="og:description" content="${product.description}" />
+            <meta property="og:title" content="${safeName}" />
+            <meta property="og:description" content="${safeDesc}" />
             <meta property="og:image" content="${imageUrl}" />
             <meta property="og:image:secure_url" content="${imageUrl}" />
             <meta property="og:image:type" content="image/jpeg" />
@@ -125,18 +206,18 @@ async function startServer() {
             <meta property="product:price:amount" content="1000" />
             <meta property="product:price:currency" content="BDT" />
             <meta name="twitter:card" content="summary_large_image" />
-            <meta name="twitter:title" content="${product.name}" />
-            <meta name="twitter:description" content="${product.description}" />
+            <meta name="twitter:title" content="${safeName}" />
+            <meta name="twitter:description" content="${safeDesc}" />
             <meta name="twitter:image" content="${imageUrl}" />
             <script type="application/ld+json">
             {
               "@context": "https://schema.org/",
               "@type": "Product",
-              "name": "${product.name}",
+              "name": "${safeName}",
               "image": [
                 "${imageUrl}"
               ],
-              "description": "${product.description}",
+              "description": "${safeDesc}",
               "brand": {
                 "@type": "Brand",
                 "name": "Baby Pyar"
@@ -153,7 +234,7 @@ async function startServer() {
             </script>
           `;
           
-          template = template.replace('</head>', `${metaTags}</head>`);
+          template = template.replace('</head>', `${metaTags}\n</head>`);
         }
       }
 

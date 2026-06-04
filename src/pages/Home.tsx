@@ -7,6 +7,7 @@ import { db } from '../firebase';
 import { collection, query, limit, getDocs, doc, getDoc } from 'firebase/firestore';
 import SEO from '../components/SEO';
 import { formatImageUrl } from '../utils/formatImage';
+import { generateSlug } from '../utils/slugify';
 
 // Dummy products for fallback
 export const DUMMY_PRODUCTS = [
@@ -240,7 +241,7 @@ export default function Home() {
                   whileTap={{ scale: 0.98 }}
                   className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all group flex flex-col h-full border border-gray-100"
                 >
-                  <Link to={`/product/${product.id}`} className="relative aspect-square md:aspect-[4/3] overflow-hidden bg-gray-100 block">
+                  <Link to={`/product/${generateSlug(product.name)}/${product.id}`} className="relative aspect-square md:aspect-[4/3] overflow-hidden bg-gray-100 block">
                     <img src={formatImageUrl(product.image)} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     {product.badge && (
                       <span className="absolute top-2 left-2 md:top-4 md:left-4 bg-white/90 backdrop-blur text-brand px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[10px] md:text-xs font-bold z-10 shadow-sm">{product.badge}</span>
@@ -248,7 +249,7 @@ export default function Home() {
                   </Link>
                   <div className="p-3 md:p-5 flex flex-col flex-grow">
                     <div className="product-category text-[10px] md:text-xs text-brand font-bold uppercase tracking-wider mb-1 md:mb-2 line-clamp-1">{product.category}</div>
-                    <Link to={`/product/${product.id}`} className="product-name text-sm md:text-lg font-bold mb-2 text-gray-900 hover:text-brand transition-colors block line-clamp-2">{product.name}</Link>
+                    <Link to={`/product/${generateSlug(product.name)}/${product.id}`} className="product-name text-sm md:text-lg font-bold mb-2 text-gray-900 hover:text-brand transition-colors block line-clamp-2">{product.name}</Link>
                     
                     <div className="flex items-center gap-1 md:gap-2 mb-3 md:mb-4">
                       <div className="text-yellow-500 text-xs md:text-sm">{'★'.repeat(Math.max(1, Math.floor(product.rating || 5)))}</div>
@@ -263,7 +264,7 @@ export default function Home() {
                     
                     <div className="flex flex-col gap-2 mt-auto">
                       <Link 
-                        to={`/product/${product.id}`}
+                        to={`/product/${generateSlug(product.name)}/${product.id}`}
                         className="w-full py-2 md:py-3 bg-accent/5 text-brand hover:bg-accent/10 rounded-xl text-xs md:text-sm font-bold transition-all flex items-center justify-center gap-1.5"
                       >
                         বিস্তারিত
@@ -278,7 +279,7 @@ export default function Home() {
                         </Link>
                       ) : (product.variation_type && product.variation_type !== 'none') ? (
                         <Link 
-                          to={`/product/${product.id}`}
+                          to={`/product/${generateSlug(product.name)}/${product.id}`}
                           className="w-full py-2 md:py-3.5 bg-gray-50 hover:bg-accent hover:text-gray-900 text-gray-800 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center justify-center gap-1.5 md:gap-2"
                         >
                           অপশন দেখুন

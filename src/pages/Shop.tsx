@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import SEO from '../components/SEO';
 import { formatImageUrl } from '../utils/formatImage';
+import { generateSlug } from '../utils/slugify';
 
 export default function Shop() {
   const { addToCart, cart } = useCart();
@@ -87,13 +88,13 @@ export default function Shop() {
                   whileTap={{ scale: 0.98 }}
                   className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-lg transition-all flex flex-col h-full group"
                 >
-                  <Link to={`/product/${product.id}`} className="relative aspect-square overflow-hidden bg-gray-100 block">
+                  <Link to={`/product/${generateSlug(product.name)}/${product.id}`} className="relative aspect-square overflow-hidden bg-gray-100 block">
                     <img src={formatImageUrl(product.image)} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     {product.badge && <span className="absolute top-2 left-2 md:top-3 md:left-3 bg-white/90 backdrop-blur text-brand px-2 py-0.5 md:py-1 rounded-full text-[10px] md:text-xs font-bold z-10 shadow-sm">{product.badge}</span>}
                   </Link>
                   <div className="p-3 md:p-5 flex flex-col flex-grow">
                     <div className="product-category text-[10px] md:text-xs text-brand font-bold uppercase tracking-wider mb-1 line-clamp-1">{product.category}</div>
-                    <Link to={`/product/${product.id}`} className="product-name text-sm md:text-lg font-bold mb-2 text-gray-900 hover:text-brand block line-clamp-2 leading-tight">{product.name}</Link>
+                    <Link to={`/product/${generateSlug(product.name)}/${product.id}`} className="product-name text-sm md:text-lg font-bold mb-2 text-gray-900 hover:text-brand block line-clamp-2 leading-tight">{product.name}</Link>
                     
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-3 md:mb-4 mt-auto">
                       <span className="text-base md:text-xl font-extrabold text-gray-900">৳ {product.price.toLocaleString('bn-BD')}</span>
@@ -104,7 +105,7 @@ export default function Shop() {
                     
                     <div className="flex flex-col gap-2 mt-auto">
                       <Link 
-                        to={`/product/${product.id}`}
+                        to={`/product/${generateSlug(product.name)}/${product.id}`}
                         className="w-full py-2 md:py-3 bg-accent/5 text-brand hover:bg-accent/10 rounded-xl text-xs md:text-sm font-bold transition-all flex items-center justify-center gap-1.5"
                       >
                         বিস্তারিত
@@ -119,7 +120,7 @@ export default function Shop() {
                         </Link>
                       ) : (product.variation_type && product.variation_type !== 'none') ? (
                         <Link 
-                          to={`/product/${product.id}`}
+                          to={`/product/${generateSlug(product.name)}/${product.id}`}
                           className="w-full py-2.5 bg-gray-50 hover:bg-accent hover:text-gray-900 text-gray-800 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2 text-xs md:text-sm"
                         >
                           অপশন দেখুন
