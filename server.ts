@@ -209,7 +209,7 @@ async function startServer() {
       const siteSettings = await getSiteSettings();
       let metaTitle = siteSettings.siteTitle;
       let metaDescription = siteSettings.siteDescription;
-      let metaImage = siteSettings.ogImage;
+      let metaImage = siteSettings.ogImage || 'https://lh3.googleusercontent.com/d/1Y9SrxGk62MAgjl4BFrAYePj_ktLklIea';
       let isProduct = false;
       let productPrice = '0';
       
