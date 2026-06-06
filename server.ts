@@ -56,6 +56,29 @@ const DUMMY_PRODUCTS = [
   }
 ];
 
+async function getSiteSettings() {
+  try {
+    const res = await fetch(`https://firestore.googleapis.com/v1/projects/baby-pyar/databases/(default)/documents/settings/site_settings`);
+    if (res.ok) {
+      const data: any = await res.json();
+      if (data.fields) {
+        return {
+          siteTitle: data.fields.siteTitle?.stringValue || 'Baby Pyar - Best Baby Products',
+          siteDescription: data.fields.siteDescription?.stringValue || 'Baby Pyar offers the best baby products.',
+          ogImage: data.fields.ogImage?.stringValue || ''
+        };
+      }
+    }
+  } catch(e) {
+    console.error('Error fetching site settings from firestore:', e);
+  }
+  return {
+    siteTitle: 'Baby Pyar - Best Baby Products',
+    siteDescription: 'Baby Pyar offers the best baby products.',
+    ogImage: ''
+  };
+}
+
 async function getProduct(id: string) {
   try {
     const res = await fetch(`https://firestore.googleapis.com/v1/projects/baby-pyar/databases/(default)/documents/products/${id}`);
@@ -181,41 +204,61 @@ async function startServer() {
       // Check if it's a product page request
       const urlWithoutQuery = url.split('?')[0];
       const segments = urlWithoutQuery.split('/').filter(Boolean);
+      const fullUrl = `https://${req.get('host')}${urlWithoutQuery}`;
+      
+      const siteSettings = await getSiteSettings();
+      let metaTitle = siteSettings.siteTitle;
+      let metaDescription = siteSettings.siteDescription;
+      let metaImage = siteSettings.ogImage;
+      let isProduct = false;
+      let productPrice = '0';
       
       if (segments[0] === 'product' && segments.length >= 2) {
         const productId = segments[segments.length - 1]; // last segment is the ID
         const product = await getProduct(productId);
         
         if (product) {
-          const imageUrl = formatImageUrl(product.image);
-          const fullUrl = `https://${req.get('host')}${urlWithoutQuery}`;
-          const safeName = escapeHtml(product.name);
-          const safeDesc = escapeHtml(product.description || product.name);
-          // Inject meta tags for Facebook and Twitter + JSON-LD Schema
-          const metaTags = `
+          isProduct = true;
+          metaTitle = product.name;
+          metaDescription = product.description || product.name;
+          metaImage = formatImageUrl(product.image) || metaImage;
+          productPrice = (product as any).price || '1000';
+        }
+      }
+
+      const safeName = escapeHtml(metaTitle);
+      const safeDesc = escapeHtml(metaDescription);
+      const safeImage = escapeHtml(metaImage);
+
+      // Inject meta tags for Facebook and Twitter
+      let metaTags = `
+        <meta property="og:site_name" content="Baby Pyar" />
+        <meta property="og:title" content="${safeName}" />
+        <meta property="og:description" content="${safeDesc}" />
+        ${safeImage ? `
+        <meta property="og:image" content="${safeImage}" />
+        <meta property="og:image:secure_url" content="${safeImage}" />
+        <meta property="og:image:type" content="image/jpeg" />
+        ` : ''}
+        <meta property="og:url" content="${fullUrl}" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="${safeName}" />
+        <meta name="twitter:description" content="${safeDesc}" />
+        ${safeImage ? `<meta name="twitter:image" content="${safeImage}" />` : ''}
+      `;
+
+      if (isProduct) {
+         metaTags += `
             <meta property="og:type" content="product" />
-            <meta property="og:site_name" content="Baby Pyar" />
-            <meta property="og:title" content="${safeName}" />
-            <meta property="og:description" content="${safeDesc}" />
-            <meta property="og:image" content="${imageUrl}" />
-            <meta property="og:image:secure_url" content="${imageUrl}" />
-            <meta property="og:image:type" content="image/jpeg" />
-            <meta property="og:image:width" content="1200" />
-            <meta property="og:image:height" content="630" />
-            <meta property="og:url" content="${fullUrl}" />
-            <meta property="product:price:amount" content="1000" />
+            <meta property="product:price:amount" content="${productPrice}" />
             <meta property="product:price:currency" content="BDT" />
-            <meta name="twitter:card" content="summary_large_image" />
-            <meta name="twitter:title" content="${safeName}" />
-            <meta name="twitter:description" content="${safeDesc}" />
-            <meta name="twitter:image" content="${imageUrl}" />
             <script type="application/ld+json">
             {
               "@context": "https://schema.org/",
               "@type": "Product",
               "name": "${safeName}",
               "image": [
-                "${imageUrl}"
+                "${safeImage}"
               ],
               "description": "${safeDesc}",
               "brand": {
@@ -226,17 +269,23 @@ async function startServer() {
                 "@type": "Offer",
                 "url": "${fullUrl}",
                 "priceCurrency": "BDT",
-                "price": "1000",
+                "price": "${productPrice}",
                 "availability": "https://schema.org/InStock",
                 "itemCondition": "https://schema.org/NewCondition"
               }
             }
             </script>
-          `;
-          
-          template = template.replace('</head>', `${metaTags}\n</head>`);
-        }
+         `;
+      } else {
+         metaTags += `
+            <meta property="og:type" content="website" />
+         `;
       }
+      
+      template = template.replace('</head>', `${metaTags}\n</head>`);
+      
+      // Update HTML title
+      template = template.replace(/<title>(.*?)<\/title>/, `<title>${safeName}</title>`);
 
       res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
     } catch (e: any) {

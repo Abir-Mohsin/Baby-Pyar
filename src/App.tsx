@@ -21,12 +21,14 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import ScrollToTop from './components/ScrollToTop';
+import GlobalSettings from './components/GlobalSettings';
 
 import NotFound from './pages/NotFound';
 
 export default function App() {
   return (
     <HelmetProvider>
+      <GlobalSettings />
       <AuthProvider>
         <CartProvider>
           <Router>
