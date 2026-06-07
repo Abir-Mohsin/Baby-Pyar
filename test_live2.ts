@@ -1,0 +1,1 @@
+fetch('https://ais-pre-u44spheawp4frl6wrrwnor-86489289289.asia-southeast1.run.app/product/baby-cotton-cap-towel-baby-hooded-towels-size-30-30/D9ULcvjC1Wat6nmPLg0f').then(r => r.text()).then(html => console.log('AIS-PRE', html.substring(0, 1500)));

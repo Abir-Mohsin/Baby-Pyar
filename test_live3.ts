@@ -1,0 +1,1 @@
+fetch('https://babypyar.com/product/serve-your-little-ones-meals-with-fish-plate-baby-plate/Fc0722EtH3BHX3dnMKHE', { headers: { 'User-Agent': 'facebookexternalhit/1.1' }}).then(r => r.text()).then(html => console.log('BABYPYAR:', html.substring(0, 1500)));
