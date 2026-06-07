@@ -202,7 +202,7 @@ export default function ProductDetails() {
       <SEO 
         title={product.name} 
         description={product.description || product.name} 
-        image={product.image}
+        image={formatImageUrl(product.image)}
         url={`https://babypyar.com/product/${product.id}`}
         jsonLd={{
           "@context": "https://schema.org",
