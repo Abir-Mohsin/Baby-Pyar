@@ -4,6 +4,8 @@ import { collection, query, orderBy, getDocs, addDoc, deleteDoc, doc, updateDoc 
 import toast from 'react-hot-toast';
 import RichTextEditor from './RichTextEditor';
 
+import { formatImageUrl } from '../../utils/formatImage';
+
 export default function BlogManager() {
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,12 +58,14 @@ export default function BlogManager() {
       if (editingId) {
         await updateDoc(doc(db, 'blog_posts', editingId), {
           ...formData,
+          image: formatImageUrl(formData.image.trim()),
           updatedAt: new Date(),
         });
         toast.success('ব্লগ পোস্ট আপডেট করা হয়েছে');
       } else {
         await addDoc(collection(db, 'blog_posts'), {
           ...formData,
+          image: formatImageUrl(formData.image.trim()),
           createdAt: new Date(),
         });
         toast.success('নতুন ব্লগ পোস্ট যোগ করা হয়েছে');
@@ -140,7 +144,7 @@ export default function BlogManager() {
           <div key={post.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow relative">
              <div className="aspect-video bg-gray-100 relative group">
                {post.image ? (
-                 <img src={post.image} className="w-full h-full object-cover" />
+                 <img src={formatImageUrl(post.image)} className="w-full h-full object-cover" />
                ) : (
                  <div className="w-full h-full flex items-center justify-center text-gray-400">কোনো ছবি নেই</div>
                )}

@@ -128,7 +128,7 @@ export default function Shop() {
                       ) : (
                         <button 
                           onClick={() => {
-                            addToCart({ id: product.id, name: product.name, price: product.price, image: product.image });
+                            addToCart({ id: product.id, name: product.name, price: product.price, image: product.image, freeDelivery: product.freeDelivery || false, customBkashDiscount: product.customBkashDiscount || 0 });
                             navigate('/checkout');
                           }}
                           className="w-full py-2.5 bg-brand hover:bg-brand-hover text-white rounded-xl font-semibold transition-colors flex items-center justify-center gap-2 text-xs md:text-sm"

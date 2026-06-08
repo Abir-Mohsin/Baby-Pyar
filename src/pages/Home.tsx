@@ -288,7 +288,7 @@ export default function Home() {
                         <button 
                           onClick={(e) => {
                             e.preventDefault();
-                            addToCart({ id: product.id, name: product.name, price: product.price, image: product.image });
+                            addToCart({ id: product.id, name: product.name, price: product.price, image: product.image, freeDelivery: product.freeDelivery || false, customBkashDiscount: product.customBkashDiscount || 0 });
                             navigate('/checkout');
                           }}
                           className="w-full py-2 md:py-3.5 bg-brand hover:bg-brand-hover text-white rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center justify-center gap-1.5 md:gap-2"

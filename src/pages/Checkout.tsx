@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { useAuth, handleFirestoreError, OperationType } from '../context/AuthContext';
 import { db } from '../firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import SEO from '../components/SEO';
@@ -22,6 +22,11 @@ export default function Checkout() {
   const [paymentMethod, setPaymentMethod] = useState<'bkash' | 'cod'>('bkash');
   const [trxId, setTrxId] = useState('');
   const [loading, setLoading] = useState(false);
+  const [siteSettings, setSiteSettings] = useState<any>({
+    deliveryChargeInside: 70,
+    deliveryChargeOutside: 120,
+    bkashDiscountPercentage: 10
+  });
 
   useEffect(() => {
     if (user) {
@@ -30,8 +35,34 @@ export default function Checkout() {
     }
   }, [user]);
 
-  const deliveryCharge = deliveryArea === 'inside' ? 70 : 120;
-  const discount = paymentMethod === 'bkash' ? Math.round(cartTotal * 0.1) : 0;
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const docRef = doc(db, 'settings', 'site_settings');
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setSiteSettings((prev: any) => ({ ...prev, ...docSnap.data() }));
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchSettings();
+  }, []);
+
+  const hasFreeDelivery = cart.some(item => item.freeDelivery);
+  const deliveryCharge = hasFreeDelivery ? 0 : (deliveryArea === 'inside' ? Number(siteSettings.deliveryChargeInside) : Number(siteSettings.deliveryChargeOutside));
+  
+  let discount = 0;
+  if (paymentMethod === 'bkash') {
+    discount = cart.reduce((total, item) => {
+      const discountPercentage = (item.customBkashDiscount && item.customBkashDiscount > 0) 
+        ? item.customBkashDiscount 
+        : Number(siteSettings.bkashDiscountPercentage);
+      return total + Math.round((item.price * item.qty) * (discountPercentage / 100));
+    }, 0);
+  }
+  
   const finalTotal = cartTotal - discount + deliveryCharge;
 
   if (cart.length === 0) {
@@ -171,12 +202,12 @@ export default function Checkout() {
                 <label className={`flex-1 p-4 rounded-xl border cursor-pointer text-center transition-all ${deliveryArea === 'inside' ? 'border-brand bg-accent/5 shadow-sm' : 'border-gray-200 bg-gray-50 hover:bg-gray-100'}`}>
                   <input type="radio" className="hidden" checked={deliveryArea === 'inside'} onChange={() => setDeliveryArea('inside')} />
                   <div className="font-bold text-gray-900">ঢাকার ভিতরে</div>
-                  <div className="text-brand font-bold mt-1">৳ ৭০</div>
+                  <div className="text-brand font-bold mt-1">{hasFreeDelivery ? 'ফ্রি' : `৳ ${siteSettings.deliveryChargeInside}`}</div>
                 </label>
                 <label className={`flex-1 p-4 rounded-xl border cursor-pointer text-center transition-all ${deliveryArea === 'outside' ? 'border-brand bg-accent/5 shadow-sm' : 'border-gray-200 bg-gray-50 hover:bg-gray-100'}`}>
                   <input type="radio" className="hidden" checked={deliveryArea === 'outside'} onChange={() => setDeliveryArea('outside')} />
                   <div className="font-bold text-gray-900">ঢাকার বাইরে</div>
-                  <div className="text-brand font-bold mt-1">৳ ১২০</div>
+                  <div className="text-brand font-bold mt-1">{hasFreeDelivery ? 'ফ্রি' : `৳ ${siteSettings.deliveryChargeOutside}`}</div>
                 </label>
               </div>
             </div>
@@ -187,7 +218,11 @@ export default function Checkout() {
                 <label className={`flex-1 p-4 rounded-xl border cursor-pointer text-center transition-all ${paymentMethod === 'bkash' ? 'border-brand bg-accent/5 shadow-sm' : 'border-gray-200 bg-gray-50 hover:bg-gray-100'}`}>
                   <input type="radio" className="hidden" checked={paymentMethod === 'bkash'} onChange={() => setPaymentMethod('bkash')} />
                   <div className="font-bold text-[#E2136E]">বিকাশ</div>
-                  <div className="text-xs mt-1 text-gray-600">১০% ডিসকাউন্ট!</div>
+                  <div className="text-xs mt-1 text-gray-600">
+                    {cart.some(item => item.customBkashDiscount && item.customBkashDiscount > 0) 
+                      ? 'স্পেশাল ডিসকাউন্ট!' 
+                      : `${siteSettings.bkashDiscountPercentage}% ডিসকাউন্ট!`}
+                  </div>
                 </label>
                 <label className={`flex-1 p-4 rounded-xl border cursor-pointer text-center transition-all ${paymentMethod === 'cod' ? 'border-emerald-500 bg-emerald-50 shadow-sm' : 'border-gray-200 bg-gray-50 hover:bg-gray-100'}`}>
                   <input type="radio" className="hidden" checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} />
@@ -232,13 +267,15 @@ export default function Checkout() {
                </div>
                {discount > 0 && (
                  <div className="flex justify-between text-sm text-emerald-600">
-                    <span className="font-medium">বিকাশ ডিসকাউন্ট (১০%)</span>
+                    <span className="font-medium">বিকাশ ডিসকাউন্ট</span>
                     <span className="font-bold">-৳ {discount.toLocaleString('bn-BD')}</span>
                  </div>
                )}
                <div className="flex justify-between text-sm">
                   <span className="text-gray-500 font-medium">ডেলিভারি চার্জ</span>
-                  <span className="font-bold text-gray-900">৳ {deliveryCharge.toLocaleString('bn-BD')}</span>
+                  <span className="font-bold text-gray-900">
+                    {deliveryCharge === 0 ? 'ফ্রি' : `৳ ${deliveryCharge.toLocaleString('bn-BD')}`}
+                  </span>
                </div>
             </div>
 

@@ -21,6 +21,8 @@ export default function ProductsManager() {
     image: '',
     gallery: [] as string[],
     stock: 10,
+    freeDelivery: false,
+    customBkashDiscount: 0,
     variations: [] as { name: string, options: string[] }[]
   });
 
@@ -68,6 +70,8 @@ export default function ProductsManager() {
       image: formattedMainImage,
       gallery: gallery || [],
       stock: formData.stock,
+      freeDelivery: formData.freeDelivery,
+      customBkashDiscount: formData.customBkashDiscount,
       variations: processedVariations,
       updatedAt: new Date()
     };
@@ -85,7 +89,7 @@ export default function ProductsManager() {
       
       setIsAdding(false);
       setEditingId(null);
-      setFormData({ name: '', category: '', price: 0, originalPrice: 0, description: '', badge: '', image: '', gallery: [], stock: 10, variations: [] });
+      setFormData({ name: '', category: '', price: 0, originalPrice: 0, description: '', badge: '', image: '', gallery: [], stock: 10, freeDelivery: false, customBkashDiscount: 0, variations: [] });
       setGalleryText('');
       fetchProducts();
     } catch (error: any) {
@@ -116,6 +120,8 @@ export default function ProductsManager() {
       image: p.image || '',
       gallery: p.gallery || [],
       stock: p.stock ?? 10,
+      freeDelivery: p.freeDelivery || false,
+      customBkashDiscount: p.customBkashDiscount || 0,
       variations: variationsArr
     });
     setGalleryText(Array.isArray(p.gallery) ? p.gallery.join(', ') : '');
@@ -126,7 +132,7 @@ export default function ProductsManager() {
   const handleCancel = () => {
     setIsAdding(false);
     setEditingId(null);
-    setFormData({ name: '', category: '', price: 0, originalPrice: 0, description: '', badge: '', image: '', gallery: [], stock: 10, variations: [] });
+    setFormData({ name: '', category: '', price: 0, originalPrice: 0, description: '', badge: '', image: '', gallery: [], stock: 10, freeDelivery: false, customBkashDiscount: 0, variations: [] });
     setGalleryText('');
   };
 
@@ -178,6 +184,22 @@ export default function ProductsManager() {
           <div>
             <label className="block text-xs text-gray-500 font-medium mb-1">স্টক</label>
             <input required type="number" className="w-full bg-white border border-gray-300 p-2 rounded-lg outline-none focus:ring-1 focus:ring-accent focus:border-brand" value={formData.stock} onChange={e=>setFormData({...formData, stock: Number(e.target.value)})} />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-500 font-medium mb-1">কাস্টম বিকাশ ডিসকাউন্ট (%) (০ থাকলে গ্লোবাল সাইট সেটিং অনুসরণ করবে)</label>
+            <input type="number" className="w-full bg-white border border-gray-300 p-2 rounded-lg outline-none focus:ring-1 focus:ring-accent focus:border-brand" value={formData.customBkashDiscount} onChange={e=>setFormData({...formData, customBkashDiscount: Number(e.target.value)})} />
+          </div>
+          <div className="md:col-span-2 flex items-center gap-3">
+            <input 
+              id="freeDelivery"
+              type="checkbox" 
+              checked={formData.freeDelivery} 
+              onChange={e => setFormData({ ...formData, freeDelivery: e.target.checked })} 
+              className="w-5 h-5 accent-brand"
+            />
+            <label htmlFor="freeDelivery" className="text-sm font-bold text-gray-900 cursor-pointer">
+              এই প্রোডাক্টের জন্য ডেলিভারি চার্জ ফ্রি করুন
+            </label>
           </div>
           <div className="md:col-span-2 mt-4 border-t border-gray-200 pt-4">
             <div className="flex justify-between items-center mb-4">
@@ -280,7 +302,7 @@ export default function ProductsManager() {
                  ✕
                </button>
              </div>
-             <img src={p.image} className="w-full aspect-square object-cover rounded-lg mb-3 bg-gray-50" />
+             <img src={formatImageUrl(p.image)} className="w-full aspect-square object-cover rounded-lg mb-3 bg-gray-50" />
              <div className="font-bold truncate text-gray-900" title={p.name}>{p.name}</div>
              <div className="flex items-center gap-2 mb-1">
                <span className="text-brand font-bold">৳{p.price}</span>
@@ -289,6 +311,12 @@ export default function ProductsManager() {
                )}
              </div>
              <div className="text-xs text-gray-500">স্টক: {p.stock} | {p.category}</div>
+             {(p.freeDelivery || p.customBkashDiscount > 0) && (
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {p.freeDelivery && <span className="bg-emerald-100 text-emerald-700 text-[10px] px-2 py-0.5 rounded-full font-bold">ফ্রি ডেলিভারি</span>}
+                  {p.customBkashDiscount > 0 && <span className="bg-pink-100 text-[#E2136E] text-[10px] px-2 py-0.5 rounded-full font-bold">{p.customBkashDiscount}% বিকাশ স্যার</span>}
+                </div>
+             )}
           </div>
         ))}
       </div>

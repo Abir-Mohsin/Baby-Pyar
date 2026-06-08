@@ -113,7 +113,7 @@ export default function TestimonialsManager() {
              </button>
              <div className="flex items-center gap-3 mb-3">
                <div className="w-10 h-10 rounded-full bg-accent/5 text-brand flex items-center justify-center font-bold text-lg overflow-hidden shrink-0">
-                 {t.image ? <img src={t.image} className="w-full h-full object-cover" /> : t.name.charAt(0)}
+                 {t.image ? <img src={formatImageUrl(t.image)} className="w-full h-full object-cover" /> : t.name.charAt(0)}
                </div>
                <div>
                  <div className="font-bold text-gray-900">{t.name}</div>

@@ -194,7 +194,7 @@ async function startServer() {
   }
 
   // Intercept all routes to serve index.html with potentially injected meta tags
-  app.get('/(*)', async (req, res) => {
+  app.get('*all', async (req, res) => {
     try {
       const url = req.originalUrl;
       

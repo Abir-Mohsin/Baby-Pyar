@@ -147,7 +147,9 @@ export default function ProductDetails() {
       name: product.name, 
       price: finalPrice, 
       image: product.image,
-      variation: variationsString
+      variation: variationsString,
+      freeDelivery: product.freeDelivery || false,
+      customBkashDiscount: product.customBkashDiscount || 0
     }, qty);
     
     if (shouldRedirect) {

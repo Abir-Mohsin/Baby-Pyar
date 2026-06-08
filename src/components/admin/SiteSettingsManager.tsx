@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../../firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { formatImageUrl } from '../../utils/formatImage';
 
 export default function SiteSettingsManager() {
   const [loading, setLoading] = useState(false);
@@ -10,7 +11,10 @@ export default function SiteSettingsManager() {
     pixelId: '',
     siteTitle: 'Baby Pyar - Best Baby Products',
     siteDescription: 'Baby Pyar offers the best baby products.',
-    ogImage: ''
+    ogImage: '',
+    deliveryChargeInside: 70,
+    deliveryChargeOutside: 120,
+    bkashDiscountPercentage: 10
   });
 
   useEffect(() => {
@@ -34,7 +38,11 @@ export default function SiteSettingsManager() {
     setLoading(true);
     setSuccess(false);
     try {
-      await setDoc(doc(db, 'settings', 'site_settings'), formData);
+      const payload = {
+        ...formData,
+        ogImage: formData.ogImage ? formatImageUrl(formData.ogImage.trim()) : ''
+      };
+      await setDoc(doc(db, 'settings', 'site_settings'), payload);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (e) {
@@ -70,6 +78,45 @@ export default function SiteSettingsManager() {
               placeholder="e.g. 123456789012345"
             />
             <p className="text-xs text-gray-500 mt-1">Leave blank to disable Meta Pixel tracking.</p>
+          </div>
+        </div>
+
+        <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+          <h3 className="font-bold text-lg mb-4 text-brand">Delivery & Payment Settings</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">
+                ডেলিভারি চার্জ (ঢাকার ভিতরে)
+              </label>
+              <input
+                type="number"
+                value={formData.deliveryChargeInside}
+                onChange={e => setFormData({...formData, deliveryChargeInside: Number(e.target.value)})}
+                className="w-full bg-white border border-gray-300 rounded-xl px-4 py-2 focus:ring-2 focus:ring-accent/20 focus:border-brand transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">
+                ডেলিভারি চার্জ (ঢাকার বাইরে)
+              </label>
+              <input
+                type="number"
+                value={formData.deliveryChargeOutside}
+                onChange={e => setFormData({...formData, deliveryChargeOutside: Number(e.target.value)})}
+                className="w-full bg-white border border-gray-300 rounded-xl px-4 py-2 focus:ring-2 focus:ring-accent/20 focus:border-brand transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">
+                বিকাশ পেমেন্ট ডিসকাউন্ট (%)
+              </label>
+              <input
+                type="number"
+                value={formData.bkashDiscountPercentage}
+                onChange={e => setFormData({...formData, bkashDiscountPercentage: Number(e.target.value)})}
+                className="w-full bg-white border border-gray-300 rounded-xl px-4 py-2 focus:ring-2 focus:ring-accent/20 focus:border-brand transition-all"
+              />
+            </div>
           </div>
         </div>
 

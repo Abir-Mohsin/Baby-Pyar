@@ -8,6 +8,8 @@ export interface CartItem {
   image: string;
   qty: number;
   variation?: string;
+  freeDelivery?: boolean;
+  customBkashDiscount?: number;
 }
 
 interface CartContextType {
