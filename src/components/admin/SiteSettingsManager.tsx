@@ -9,6 +9,7 @@ export default function SiteSettingsManager() {
 
   const [formData, setFormData] = useState({
     pixelId: '',
+    gtmId: '',
     siteTitle: 'Baby Pyar - Best Baby Products',
     siteDescription: 'Baby Pyar offers the best baby products.',
     ogImage: '',
@@ -26,7 +27,10 @@ export default function SiteSettingsManager() {
       const docRef = doc(db, 'settings', 'site_settings');
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
-        setFormData(docSnap.data() as any);
+        setFormData(prev => ({
+          ...prev,
+          ...docSnap.data()
+        }));
       }
     } catch (e) {
       console.error(e);
@@ -66,18 +70,33 @@ export default function SiteSettingsManager() {
       <form onSubmit={handleSave} className="space-y-6 max-w-2xl">
         <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
           <h3 className="font-bold text-lg mb-4 text-brand">Tracking & Analytics</h3>
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">
-              Meta Pixel ID
-            </label>
-            <input
-              type="text"
-              value={formData.pixelId}
-              onChange={e => setFormData({...formData, pixelId: e.target.value})}
-              className="w-full bg-white border border-gray-300 rounded-xl px-4 py-2 focus:ring-2 focus:ring-accent/20 focus:border-brand transition-all"
-              placeholder="e.g. 123456789012345"
-            />
-            <p className="text-xs text-gray-500 mt-1">Leave blank to disable Meta Pixel tracking.</p>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">
+                Meta Pixel ID
+              </label>
+              <input
+                type="text"
+                value={formData.pixelId || ''}
+                onChange={e => setFormData({...formData, pixelId: e.target.value})}
+                className="w-full bg-white border border-gray-300 rounded-xl px-4 py-2 focus:ring-2 focus:ring-accent/20 focus:border-brand transition-all"
+                placeholder="e.g. 123456789012345"
+              />
+              <p className="text-xs text-gray-500 mt-1">Leave blank to disable Meta Pixel tracking.</p>
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">
+                Google Tag Manager ID
+              </label>
+              <input
+                type="text"
+                value={formData.gtmId || ''}
+                onChange={e => setFormData({...formData, gtmId: e.target.value})}
+                className="w-full bg-white border border-gray-300 rounded-xl px-4 py-2 focus:ring-2 focus:ring-accent/20 focus:border-brand transition-all"
+                placeholder="e.g. GTM-XXXXXXX"
+              />
+              <p className="text-xs text-gray-500 mt-1">Leave blank to disable Google Tag Manager.</p>
+            </div>
           </div>
         </div>
 
@@ -129,7 +148,7 @@ export default function SiteSettingsManager() {
             </label>
             <input
               type="text"
-              value={formData.siteTitle}
+              value={formData.siteTitle || ''}
               onChange={e => setFormData({...formData, siteTitle: e.target.value})}
               className="w-full bg-white border border-gray-300 rounded-xl px-4 py-2 focus:ring-2 focus:ring-accent/20 focus:border-brand transition-all"
             />
@@ -140,7 +159,7 @@ export default function SiteSettingsManager() {
               Default Site Description
             </label>
             <textarea
-              value={formData.siteDescription}
+              value={formData.siteDescription || ''}
               onChange={e => setFormData({...formData, siteDescription: e.target.value})}
               className="w-full bg-white border border-gray-300 rounded-xl px-4 py-2 min-h-[100px] focus:ring-2 focus:ring-accent/20 focus:border-brand transition-all"
             />
@@ -152,7 +171,7 @@ export default function SiteSettingsManager() {
             </label>
             <input
               type="url"
-              value={formData.ogImage}
+              value={formData.ogImage || ''}
               onChange={e => setFormData({...formData, ogImage: e.target.value})}
               className="w-full bg-white border border-gray-300 rounded-xl px-4 py-2 focus:ring-2 focus:ring-accent/20 focus:border-brand transition-all"
               placeholder="https://example.com/image.jpg"

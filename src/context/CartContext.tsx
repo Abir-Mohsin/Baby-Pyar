@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { trackPixelEvent } from '../utils/tracking';
 
 export interface CartItem {
   id: string; // The firestore ID
@@ -52,6 +53,14 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [cart]);
 
   const addToCart = (item: Omit<CartItem, 'qty'>, quantity = 1) => {
+    trackPixelEvent('AddToCart', {
+      content_name: item.name,
+      content_ids: [item.id],
+      content_type: 'product',
+      value: item.price * quantity,
+      currency: 'BDT'
+    });
+
     setCart((prev) => {
       const existingKey = item.variation ? `${item.id}-${item.variation}` : item.id;
       const existing = prev.find((p) => {

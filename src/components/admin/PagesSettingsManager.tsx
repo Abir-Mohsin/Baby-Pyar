@@ -23,7 +23,10 @@ export default function PagesSettingsManager() {
         if (docSnap.exists()) {
           const data = docSnap.data();
           if (data && data.data) {
-            setFormData(data.data);
+            setFormData(prev => ({
+              ...prev,
+              ...data.data
+            }));
           }
         }
       } catch (error: any) {

@@ -48,7 +48,15 @@ export default function Checkout() {
       }
     };
     fetchSettings();
-  }, []);
+
+    import('../utils/tracking').then(({ trackPixelEvent }) => {
+      trackPixelEvent('InitiateCheckout', {
+        value: cartTotal,
+        currency: 'BDT',
+        num_items: cart.length
+      });
+    });
+  }, [cart, cartTotal]);
 
   const hasFreeDelivery = cart.some(item => item.freeDelivery);
   const deliveryCharge = hasFreeDelivery ? 0 : (deliveryArea === 'inside' ? Number(siteSettings.deliveryChargeInside) : Number(siteSettings.deliveryChargeOutside));
@@ -119,9 +127,22 @@ export default function Checkout() {
       
       console.log('Order created successfully with ID:', docRef.id);
 
+      import('../utils/tracking').then(({ trackPixelEvent }) => {
+        trackPixelEvent('Purchase', {
+          value: finalTotal,
+          currency: 'BDT',
+          transaction_id: docRef.id,
+          contents: cart.map(item => ({
+            id: item.id,
+            quantity: item.qty
+          })),
+          content_type: 'product'
+        });
+      });
+
       // Trigger automatic email for admin using FormSubmit
       try {
-        const orderDetails = cart.map(item => `${item.name} x ${item.quantity} (৳${item.price * item.quantity})`).join('\n');
+        const orderDetails = cart.map(item => `${item.name} x ${item.qty} (৳${item.price * item.qty})`).join('\n');
         
         fetch('https://formsubmit.co/ajax/abirmohsin02@gmail.com', {
           method: 'POST',

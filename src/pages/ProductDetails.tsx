@@ -46,6 +46,16 @@ export default function ProductDetails() {
         if (fetchedProduct) {
           setProduct(fetchedProduct);
           setActiveImage(fetchedProduct.image);
+          
+          import('../utils/tracking').then(({ trackPixelEvent }) => {
+            trackPixelEvent('ViewContent', {
+              content_name: fetchedProduct.name,
+              content_ids: [fetchedProduct.id],
+              content_type: 'product',
+              value: fetchedProduct.price,
+              currency: 'BDT'
+            });
+          });
         }
       } catch (error: any) {
         console.error('Error fetching product:', error);
