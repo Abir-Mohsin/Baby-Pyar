@@ -70,7 +70,9 @@ async function getSiteSettings() {
         return {
           siteTitle: data.fields.siteTitle?.stringValue || 'Baby Pyar - Best Baby Products',
           siteDescription: data.fields.siteDescription?.stringValue || 'Baby Pyar offers the best baby products.',
-          ogImage: data.fields.ogImage?.stringValue || ''
+          ogImage: data.fields.ogImage?.stringValue || '',
+          pixelId: data.fields.pixelId?.stringValue || null,
+          capiToken: data.fields.capiToken?.stringValue || null
         };
       }
     }
@@ -80,7 +82,9 @@ async function getSiteSettings() {
   return {
     siteTitle: 'Baby Pyar - Best Baby Products',
     siteDescription: 'Baby Pyar offers the best baby products.',
-    ogImage: ''
+    ogImage: '',
+    pixelId: null,
+    capiToken: null
   };
 }
 
@@ -113,6 +117,68 @@ async function startServer() {
 
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok' });
+  });
+
+  app.post('/api/capi', async (req, res) => {
+    try {
+      const { eventName, data, sourceUrl } = req.body;
+      const settings = await getSiteSettings();
+
+      if (!settings.pixelId || !settings.capiToken) {
+        return res.status(400).json({ error: 'CAPI not configured' });
+      }
+
+      const clientIpAddress = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+      const clientUserAgent = req.headers['user-agent'];
+      
+      const currentTimestamp = Math.floor(Date.now() / 1000);
+      
+      // Compute standard hashed data points if possible
+      let user_data: any = {
+        client_ip_address: typeof clientIpAddress === 'string' ? clientIpAddress.split(',')[0] : clientIpAddress,
+        client_user_agent: clientUserAgent,
+      };
+
+      // Facebook requires fbp / fbc cookies. For a basic implementation, we just send what we have.
+      // If we had fbp from cookie:
+      // const cookies = req.headers.cookie; ... parse ...
+      
+      const custom_data: any = {};
+      if (data?.value) custom_data.value = data.value;
+      if (data?.currency) custom_data.currency = data.currency;
+      if (data?.content_name) custom_data.content_name = data.content_name;
+      if (data?.content_ids) custom_data.content_ids = data.content_ids;
+      if (data?.content_type) custom_data.content_type = data.content_type;
+      if (data?.contents) custom_data.contents = data.contents;
+      if (data?.num_items) custom_data.num_items = data.num_items;
+
+      const eventPayload = {
+        data: [
+          {
+            event_name: eventName,
+            event_time: currentTimestamp,
+            event_source_url: sourceUrl || req.headers.referer || '',
+            action_source: 'website',
+            user_data,
+            custom_data
+          }
+        ]
+      };
+
+      const capiUrl = `https://graph.facebook.com/v19.0/${settings.pixelId}/events?access_token=${settings.capiToken}`;
+      
+      const fbRes = await fetch(capiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(eventPayload),
+      });
+
+      const fbData = await fbRes.json();
+      res.json({ success: true, fbData });
+    } catch (e: any) {
+      console.error('CAPI Server Error:', e);
+      res.status(500).json({ error: e.message });
+    }
   });
 
   app.get('/sitemap.xml', async (req, res) => {

@@ -10,6 +10,7 @@ export default function SiteSettingsManager() {
   const [formData, setFormData] = useState({
     pixelId: '',
     gtmId: '',
+    capiToken: '',
     siteTitle: 'Baby Pyar - Best Baby Products',
     siteDescription: 'Baby Pyar offers the best baby products.',
     ogImage: '',
@@ -83,6 +84,18 @@ export default function SiteSettingsManager() {
                 placeholder="e.g. 123456789012345"
               />
               <p className="text-xs text-gray-500 mt-1">Leave blank to disable Meta Pixel tracking.</p>
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">
+                Facebook Conversions API Access Token
+              </label>
+              <textarea
+                value={formData.capiToken || ''}
+                onChange={e => setFormData({...formData, capiToken: e.target.value})}
+                className="w-full bg-white border border-gray-300 rounded-xl px-4 py-2 min-h-[80px] focus:ring-2 focus:ring-accent/20 focus:border-brand transition-all"
+                placeholder="EAAI..."
+              />
+              <p className="text-xs text-gray-500 mt-1">Leave blank to disable CAPI. Required for Server-Side events.</p>
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">
